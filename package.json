@@ -1,0 +1,41 @@
+{
+  "name": "graystripe",
+  "version": "1.0.0",
+  "description": "A HTML + TypeScript implemented plain-text adventure game engine.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CXuesong/Graystripe.git"
+  },
+  "keywords": [
+    "adventure",
+    "game"
+  ],
+  "author": "CXuesong",
+  "license": "MIT",
+  "private": true,
+  "bugs": {
+    "url": "https://github.com/CXuesong/Graystripe/issues"
+  },
+  "homepage": "https://github.com/CXuesong/Graystripe#readme",
+  "devDependencies": {
+    "del": "^2.2.2",
+    "gulp": "^3.9.1",
+    "gulp-include": "^2.3.1",
+    "gulp-istanbul": "^1.1.1",
+    "gulp-jsonminify": "^1.0.0",
+    "gulp-mocha": "^3.0.1",
+    "gulp-sourcemaps": "^1.9.1",
+    "gulp-tslint": "^7.0.1",
+    "gulp-typescript": "^3.1.3",
+    "gulp-uglify": "^2.0.0",
+    "run-sequence": "^1.2.2",
+    "tslint": "^4.2.0",
+    "typescript": "^2.1.4",
+    "vinyl-buffer": "^1.0.0",
+    "vinyl-source-stream": "^1.1.0"
+  }
+}
