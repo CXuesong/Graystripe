@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Play</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/4.0.2/bootstrap-material-design.min.css"
+        integrity="sha256-X/mlyZAafJ8j5e74pWh4+qNUD1zurCvLA6hODVobQX0=" crossorigin="anonymous" />
+    <script src="//cdnjs.cloudflare.com/ajax/libs/systemjs/0.19.41/system.js" integrity="sha256-XcUqNv8jyMENREIx9qqoRwOWTY5R+XS/WQ5nDXG1GsI="
+        crossorigin="anonymous"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
+        crossorigin="anonymous"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/knockout/3.4.1/knockout-min.js" integrity="sha256-PX9zWVaICUCeklczWaS9DLBb9uGN7pCkCT0Kyz1elRo="
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/URI.js/1.18.7/URI.min.js" integrity="sha256-SSmTv/g7uUjsYbIkPCbQJ5pWmW8MUeZsefNE2Q3aXGY="
+        crossorigin="anonymous"></script>
+    <script>
+        System.defaultJSExtensions = true;
+        var brightheart = System.import("script/play");
+    </script>
+</head>
+
+<body>
+    <ul class="nav nav-tabs bg-primary">
+        <li class="nav-item">
+            <a class="nav-link" href="./">TAG</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link active" href="#">Play</a>
+        </li>
+    </ul>
+    <form class="form-horizontal" data-bind="with: currentStageVM">
+        <fieldset>
+            <legend data-bind="text: stageName"></legend>
+            <div data-bind="html: prompt"></div>
+            <ul class="list-group" data-bind="foreach: options">
+                <a href="#" class="list-group-item" data-bind="html: text, click: notifyClick;"></a>
+            </ul>
+        </fieldset>
+    </form>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/4.0.2/bootstrap-material-design.umd.min.js" integrity="sha256-GYcdwXot2kSaBb8kr9o8zDKYBwQ1PCkugjcCYFQS+IA="
+        crossorigin="anonymous"></script>
+    <script>
+        $(function () { $('body').bootstrapMaterialDesign(); });
+    </script>
+</body>
+
+</html>
