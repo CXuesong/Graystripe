@@ -2,7 +2,7 @@
 
 An HTML + TypeScript implemented plain-text adventure game engine.
 
-Still work in progress.
+Still work in progress. You may visit the demo site [here](https://cxuesong.github.io/Graystripe).
 
 ## Setup for development
 

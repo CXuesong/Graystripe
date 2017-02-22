@@ -32,19 +32,39 @@ class CurrentStageViewModel {
 
     public constructor(public readonly stageContext: Ptag.StageContext,
         public readonly onOptionClick: (option: StageOptionViewModel) => void) {
-        this.options.extend({ rateLimit: 100 });
     }
 
     public refresh() {
         this.stageName(this.stageContext.currentStage.toString());
         this.prompt(this.stageContext.prompt);
-        this.options.removeAll();
+        let opts = [];
         this.stageContext.options.forEach(opt => {
-            this.options.push(new StageOptionViewModel(opt, sender => {
+            opts.push(new StageOptionViewModel(opt, sender => {
                 this.onOptionClick(sender);
             }));
         });
+        this.options(opts);
     }
+}
+
+class TabViewModel {
+    private _IsVisible = false;
+
+    public get IsVisible() { return this._IsVisible; }
+    public set IsVisible(value: boolean) {
+        if (this._IsVisible !== value) {
+            this._IsVisible = value;
+            if (value) this.onShow(); else this.onHide();
+        }
+    }
+
+    protected onShow() { }
+    protected onHide() { }
+}
+
+class SaveLoadTabViewModel extends TabViewModel {
+    public readonly IsSaving = ko.observable(false);
+    public readonly Slots = ko.observableArray();
 }
 
 /**
@@ -67,6 +87,34 @@ class PlayerViewModel {
     public gotoStageAsync(targetStageName: string) {
         return this._engine.gotoStageAsync(new Ptag.StageName(targetStageName))
             .done(() => { this.currentStageVM.refresh(); }).fail(err => { console.error(err); });
+    }
+
+    public restartGame() {
+        if (!confirm("Do you wish to restart the game?"))
+            return $.Deferred().resolve();
+        return this.gotoStageAsync(":");
+    }
+
+    public saveGame() {
+        if (!store.enabled) {
+            alert('Local storage is not supported by your browser. Please disable "Private Mode", or upgrade to a modern browser.');
+            return;
+        }
+        store.set("context", this._engine.SaveContext());
+    }
+
+    public loadGame() {
+        if (!store.enabled) {
+            alert('Local storage is not supported by your browser. Please disable "Private Mode", or upgrade to a modern browser.');
+            return;
+        }
+        let data = store.get("context");
+        if (!data) {
+            alert("No saved session to load.");
+            return $.Deferred().resolve();
+        }
+        return this._engine.LoadContextAsync(data)
+            .done(() => { this.currentStageVM.refresh(); }).fail(err => { console.error(err); });;
     }
 }
 

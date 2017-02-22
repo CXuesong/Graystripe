@@ -5,13 +5,20 @@
     <title>Play</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Material Design fonts -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <!-- Bootstrap Material Design -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/4.0.2/bootstrap-material-design.min.css"
         integrity="sha256-X/mlyZAafJ8j5e74pWh4+qNUD1zurCvLA6hODVobQX0=" crossorigin="anonymous" />
+    <!-- Basic Script -->
     <script src="//cdnjs.cloudflare.com/ajax/libs/systemjs/0.19.41/system.js" integrity="sha256-XcUqNv8jyMENREIx9qqoRwOWTY5R+XS/WQ5nDXG1GsI="
         crossorigin="anonymous"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
         crossorigin="anonymous"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/knockout/3.4.1/knockout-min.js" integrity="sha256-PX9zWVaICUCeklczWaS9DLBb9uGN7pCkCT0Kyz1elRo="
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/store.js/1.3.20/store.min.js" integrity="sha256-0jgHNEQo7sIScbcI/Pc5GYJ+VosKM1mJ+fI0iuQ1a9E="
         crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/URI.js/1.18.7/URI.min.js" integrity="sha256-SSmTv/g7uUjsYbIkPCbQJ5pWmW8MUeZsefNE2Q3aXGY="
         crossorigin="anonymous"></script>
@@ -22,18 +29,55 @@
 </head>
 
 <body>
-    <!--=include template/header.html -->
-    <form class="form-horizontal" data-bind="with: currentStageVM">
-        <fieldset>
-            <legend data-bind="text: stageName"></legend>
-            <div data-bind="html: prompt"></div>
-            <ul class="list-group" data-bind="foreach: options">
-                <a href="#" class="list-group-item" data-bind="html: text, click: notifyClick;"></a>
+    <div class="bmd-layout-container bmd-drawer-f-l bmd-drawer-overlay-md-down bmd-drawer-in-lg-up">
+        <header class="bmd-layout-header">
+            <div class="navbar navbar-light bg-faded">
+                <button class="navbar-toggler hidden-lg-up" type="button" data-toggle="drawer" data-target="#dw-s2">
+                    <span class="sr-only">Toggle drawer</span>
+                    <i class="material-icons">menu</i>
+                </button>
+                <ul class="nav navbar-nav">
+                    <li class="nav-item">Play</li>
+                </ul>
+            </div>
+        </header>
+        <div id="dw-s2" class="bmd-layout-drawer bg-faded">
+            <header>
+                <a class="navbar-brand">Menu</a>
+            </header>
+            <ul class="list-group">
+                <a class="list-group-item list-group-item-action" href="#" data-bind="click: saveGame">Save</a>
+                <a class="list-group-item list-group-item-action" href="#" data-bind="click: loadGame">Load</a>
+                <hr />
+                <a class="list-group-item list-group-item-action" href="#" data-bind="click: restartGame">Restart</a>
             </ul>
-        </fieldset>
-    </form>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/4.0.2/bootstrap-material-design.umd.min.js" integrity="sha256-GYcdwXot2kSaBb8kr9o8zDKYBwQ1PCkugjcCYFQS+IA="
-        crossorigin="anonymous"></script>
+        </div>
+        <main class="bmd-layout-content">
+            <div class="container">
+                <div class="tab-content fade in">
+                    <div class="tab-pane active" id="tab-primary" role="tabpanel">
+                        <div class="form-horizontal" data-bind="with: currentStageVM">
+                            <fieldset>
+                                <legend data-bind="text: stageName"></legend>
+                                <div data-bind="html: prompt"></div>
+                                <ul class="list-group" data-bind="foreach: options">
+                                    <a href="#" class="list-group-item list-group-item-action" data-bind="html: text, click: notifyClick;"></a>
+                                </ul>
+                            </fieldset>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="tab-save-load" role="tabpanel">
+                    </div>
+                    <div class="tab-pane fade" id="tab-about" role="tabpanel">
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha256-gL1ibrbVcRIHKlCO5OXOPC/lZz/gpdApgQAzskqqXp8="
+        crossorigin=" anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/4.0.2/bootstrap-material-design.iife.min.js"
+        integrity="sha256-ZXg72BEfPkGcWiAualdfLU4jSEj7sabDa40wc+V9RKg=" crossorigin=" anonymous"></script>
     <script>
         $(function () { $('body').bootstrapMaterialDesign(); });
     </script>

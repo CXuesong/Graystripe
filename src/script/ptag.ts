@@ -64,6 +64,7 @@ export class StageContext {
     // Current Stage
     public prompt: string;
     public options: ObjectModel.StageOption[];
+    // Utility
     public getAbsUrl(path: string) {
         return new URI(this.rootUrl).filename(path).toString();
     }
@@ -112,9 +113,19 @@ export class GameEngine {
         else
             return $.Deferred().resolve(group);
     }
-
-    public gotoStageAsync(name: StageName) {
-        name = StageName.Combine(this._context.currentStage, name);
+    /**
+     * Goes to the startup stage of the game.
+     */
+    public gotoStageAsync();
+    /**
+     * Goes to a specific stage of the game.
+     */
+    public gotoStageAsync(name: StageName);
+    public gotoStageAsync(name?: StageName) {
+        if (name)
+            name = StageName.Combine(this._context.currentStage, name);
+        else
+            name = new StageName(":");
         console.log("gotoStageAsync %s", name.toString());
         return this.getStageGroupAsync(name.groupName).then(group => {
             let stage = group.stages[name.localName];
@@ -127,6 +138,20 @@ export class GameEngine {
             }
             return $.Deferred().reject(new StageMissingError(name));
         });
+    }
+
+    /**
+     * Persists current state into an object dictionary and returns it.
+     */
+    public SaveContext() {
+        return { currentStage: this._context.currentStage.toString(), stateStore: this._context.stateStore };
+    }
+    /**
+     * Load current stage from an object dictionary.
+     */
+    public LoadContextAsync(obj: any) {
+        this._context.stateStore = obj.stateStore || {};
+        return this.gotoStageAsync(new StageName(obj.currentStage || ":"));
     }
 
     public get context() { return this._context; }
