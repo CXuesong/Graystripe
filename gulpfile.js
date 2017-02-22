@@ -3,6 +3,7 @@ var gulp = require("gulp"),
     tslint = require("gulp-tslint"),
     tsc = require("gulp-typescript"),
     sourcemaps = require("gulp-sourcemaps"),
+    cleanCSS = require('gulp-clean-css'),
     uglify = require("gulp-uglify"),
     runSequence = require("run-sequence"),
     mergeStream = require("merge-stream"),
@@ -33,39 +34,62 @@ gulp.task("build-ts", function () {
     ], { base: SRC_PATH })
         .pipe(sourcemaps.init())
         .pipe(tsProject())
+        //.pipe(uglify())
         .pipe(sourcemaps.write('.'))
         .pipe(gulp.dest(DIST_PATH));
 });
 
 gulp.task("build", function (cb) {
-    return runSequence(["build-ts"], cb);
+    return runSequence("build-ts", cb);
 });
 
 ////////// PUBLISH //////////
-gulp.task("transfer-misc", function () {
+gulp.task("transfer-js", function () {
+    return gulp.src([SRC_PATH + "/script/**/*.js"], { base: SRC_PATH })
+        .pipe(sourcemaps.init())
+        .pipe(uglify())
+        .pipe(sourcemaps.write('.'))
+        .pipe(gulp.dest(DIST_PATH));
+});
+
+gulp.task("transfer-css", function () {
+    return gulp.src([SRC_PATH + "/**/*.css"], { base: SRC_PATH })
+        .pipe(sourcemaps.init())
+        .pipe(cleanCSS())
+        .pipe(sourcemaps.write('.'))
+        .pipe(gulp.dest(DIST_PATH));
+});
+
+gulp.task("transfer-html", function () {
     return gulp.src([
         SRC_PATH + "/*.html",
-        SRC_PATH + "/data/**/*",
-        SRC_PATH + "/**/*.js",
     ], { base: SRC_PATH + "/" })
         .pipe(include())
         .pipe(gulp.dest(DIST_PATH));
 });
 
-gulp.task("transfer-minify-json", function () {
+gulp.task("transfer-misc", function () {
+    return gulp.src([
+        SRC_PATH + "/data/**/*",
+        SRC_PATH + "/font/**/*",
+    ], { base: SRC_PATH + "/" })
+        .pipe(gulp.dest(DIST_PATH));
+});
+
+gulp.task("minify-json", function () {
     return gulp.src([DIST_PATH + "/**/*.json"], { base: "./" })
         .pipe(jsonminify())
         .pipe(gulp.dest("./"));
 });
 
 gulp.task("transfer", function (cb) {
-    return runSequence("transfer-misc", "transfer-minify-json", cb);
+    return runSequence(["transfer-html", "transfer-misc","transfer-js", "transfer-css"], ["minify-json"], cb);
 });
 
 gulp.task("cleanup-dist", function () {
-    return del([DIST_PATH + "/*.html"], [DIST_PATH + "/**/*.js"]);
+    return del([DIST_PATH + "/*.html", DIST_PATH + "/**/*.js", DIST_PATH + "/**/*.css", DIST_PATH + "/**/*.map"]);
 });
 
 gulp.task("publish", function (cb) {
-    return runSequence("build", "cleanup-dist", "transfer", cb);
+    return runSequence("cleanup-dist", "build", "transfer", cb);
 });

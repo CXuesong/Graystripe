@@ -37,7 +37,7 @@ class CurrentStageViewModel {
     public refresh() {
         this.stageName(this.stageContext.currentStage.toString());
         this.prompt(this.stageContext.prompt);
-        let opts = [];
+        let opts = <StageOptionViewModel[]>[];
         this.stageContext.options.forEach(opt => {
             opts.push(new StageOptionViewModel(opt, sender => {
                 this.onOptionClick(sender);
@@ -80,7 +80,7 @@ class PlayerViewModel {
 
     // public get engine() { return this._engine; }
     public openGameAsync() {
-        let t = toastr.info("Loading game…");
+        let t = toastr.info("Loading game…", null, { timeOut: 0 });
         return this._engine.openGameAsync(new URI(window.location.href).hash("").search("").filename("data/demo/game.json").toString())
             .done(() => {
                 this.currentStageVM.refresh();
@@ -92,7 +92,7 @@ class PlayerViewModel {
         let name = new Ptag.StageName(targetStageName);
         let d = this._engine.gotoStageAsync(name);
         if (d.state() === "pending") {
-            let t = toastr.info("Loading stage…<br />" + Utility.htmlEscape(name.toString()));
+            let t = toastr.info(Utility.htmlEscape(name.toString()), "Loading stage…", { timeOut: 0 });
             d.always(() => { t.hide(); });
         }
         return d.done(() => {
@@ -103,7 +103,7 @@ class PlayerViewModel {
     public restartGame() {
         if (!confirm("Do you wish to restart the game?"))
             return $.Deferred().resolve();
-        return this.gotoStageAsync(":");
+        return this.gotoStageAsync(":").done(() => { toastr.success("You have restared the game."); });
     }
 
     public saveGame() {

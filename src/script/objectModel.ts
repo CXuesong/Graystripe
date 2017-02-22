@@ -26,12 +26,11 @@ export interface StageOption {
 }
 
 export interface SessionSlot {
-    public time: Date;
-    public stageContext: any;
+    time: Date;
+    stageContext: any;
 }
 
-export function reconstructSessionSlot(obj: SessionSlot)
-{
+export function reconstructSessionSlot(obj: SessionSlot) {
     if (!obj) return obj;
     obj.time = new Date(obj.time);
 }

@@ -1,6 +1,7 @@
 {
     "stages": {
         "": {
+            "prompt":"<p>这是一个正在试验中的文字冒险游戏样例。你可以在<a href=\"https://github.com/CXuesong/Graystripe/tree/master/src/data/demo\">这里</a>找到游戏的流程文件。</p><p>游戏的流程参考了<a href=\"http://warriors-tag.huiji.wiki\">此维基</a>的内容。在此，对以上维基的编辑人员表示感谢。</p><p>请选择一个选项以继续。</a>",
             "options": [
                 {
                     "target": "Dream1"
