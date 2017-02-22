@@ -116,11 +116,11 @@ export class GameEngine {
     /**
      * Goes to the startup stage of the game.
      */
-    public gotoStageAsync();
+    public gotoStageAsync(): JQueryPromise<{}>;
     /**
      * Goes to a specific stage of the game.
      */
-    public gotoStageAsync(name: StageName);
+    public gotoStageAsync(name: StageName): JQueryPromise<{}>;
     public gotoStageAsync(name?: StageName) {
         if (name)
             name = StageName.Combine(this._context.currentStage, name);

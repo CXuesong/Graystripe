@@ -3,4 +3,5 @@
 /// <reference path="globals/knockout/index.d.ts" />
 /// <reference path="globals/storejs/index.d.ts" />
 /// <reference path="globals/systemjs/index.d.ts" />
+/// <reference path="globals/toastr/index.d.ts" />
 /// <reference path="globals/urijs/index.d.ts" />

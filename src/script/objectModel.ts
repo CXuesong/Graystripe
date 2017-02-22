@@ -24,3 +24,14 @@ export interface StageOption {
     target: string;
     text: string;
 }
+
+export interface SessionSlot {
+    public time: Date;
+    public stageContext: any;
+}
+
+export function reconstructSessionSlot(obj: SessionSlot)
+{
+    if (!obj) return obj;
+    obj.time = new Date(obj.time);
+}

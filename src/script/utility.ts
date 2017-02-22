@@ -20,7 +20,7 @@ export function getJson(url: string) {
     });
 }
 
-export function escapeHtml(unsafe: string) {
+export function htmlEscape(unsafe: string) {
     return unsafe
          .replace(/&/g, "&amp;")
          .replace(/</g, "&lt;")
