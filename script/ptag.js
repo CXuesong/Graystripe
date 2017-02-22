@@ -131,7 +131,10 @@ System.register(["./utility"], function (exports_1, context_1) {
                 };
                 GameEngine.prototype.gotoStageAsync = function (name) {
                     var _this = this;
-                    name = StageName.Combine(this._context.currentStage, name);
+                    if (name)
+                        name = StageName.Combine(this._context.currentStage, name);
+                    else
+                        name = new StageName(":");
                     console.log("gotoStageAsync %s", name.toString());
                     return this.getStageGroupAsync(name.groupName).then(function (group) {
                         var stage = group.stages[name.localName];
@@ -143,6 +146,13 @@ System.register(["./utility"], function (exports_1, context_1) {
                         }
                         return $.Deferred().reject(new StageMissingError(name));
                     });
+                };
+                GameEngine.prototype.SaveContext = function () {
+                    return { currentStage: this._context.currentStage.toString(), stateStore: this._context.stateStore };
+                };
+                GameEngine.prototype.LoadContextAsync = function (obj) {
+                    this._context.stateStore = obj.stateStore || {};
+                    return this.gotoStageAsync(new StageName(obj.currentStage || ":"));
                 };
                 Object.defineProperty(GameEngine.prototype, "context", {
                     get: function () { return this._context; },

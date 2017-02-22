@@ -19,7 +19,7 @@ System.register([], function (exports_1, context_1) {
         });
     }
     exports_1("getJson", getJson);
-    function escapeHtml(unsafe) {
+    function htmlEscape(unsafe) {
         return unsafe
             .replace(/&/g, "&amp;")
             .replace(/</g, "&lt;")
@@ -27,7 +27,7 @@ System.register([], function (exports_1, context_1) {
             .replace(/"/g, "&quot;")
             .replace(/'/g, "&#039;");
     }
-    exports_1("escapeHtml", escapeHtml);
+    exports_1("htmlEscape", htmlEscape);
     var NetError, ResourceMissingError;
     return {
         setters: [],
