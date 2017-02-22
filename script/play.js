@@ -107,7 +107,7 @@ System.register(["./objectModel", "./utility", "./ptag"], function (exports_1, c
                 }
                 PlayerViewModel.prototype.openGameAsync = function () {
                     var _this = this;
-                    var t = toastr.info("Loading game…");
+                    var t = toastr.info("Loading game…", null, { timeOut: 0 });
                     return this._engine.openGameAsync(new URI(window.location.href).hash("").search("").filename("data/demo/game.json").toString())
                         .done(function () {
                         _this.currentStageVM.refresh();
@@ -119,7 +119,7 @@ System.register(["./objectModel", "./utility", "./ptag"], function (exports_1, c
                     var name = new Ptag.StageName(targetStageName);
                     var d = this._engine.gotoStageAsync(name);
                     if (d.state() === "pending") {
-                        var t_1 = toastr.info("Loading stage…<br />" + Utility.htmlEscape(name.toString()));
+                        var t_1 = toastr.info(Utility.htmlEscape(name.toString()), "Loading stage…", { timeOut: 0 });
                         d.always(function () { t_1.hide(); });
                     }
                     return d.done(function () {
@@ -129,7 +129,7 @@ System.register(["./objectModel", "./utility", "./ptag"], function (exports_1, c
                 PlayerViewModel.prototype.restartGame = function () {
                     if (!confirm("Do you wish to restart the game?"))
                         return $.Deferred().resolve();
-                    return this.gotoStageAsync(":");
+                    return this.gotoStageAsync(":").done(function () { toastr.success("You have restared the game."); });
                 };
                 PlayerViewModel.prototype.saveGame = function () {
                     if (!store.enabled) {
