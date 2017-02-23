@@ -1,6 +1,7 @@
 /// <reference path="../../typings/index.d.ts"/>
 import * as Utility from "./utility";
 import * as VmUtility from "./vmUtility";
+import * as Locale from "./locale";
 import * as ObjectModel from "./objectModel";
 import * as Ptag from "./ptag";
 import { LR } from "./localization";
@@ -19,7 +20,9 @@ class StageOptionViewModel {
     public constructor(public readonly model: ObjectModel.StageOption,
         public readonly onClick: (sender: StageOptionViewModel) => void) {
         this.target = model.target;
-        this.text = model.text || Utility.htmlEscape(this.target);
+        this.text = model.text === null || model.text === undefined
+            ? Utility.htmlEscape(this.target)
+            : Ptag.parseMarkup(model.text);
     }
 
     public notifyClick() {
@@ -39,7 +42,7 @@ class CurrentStageViewModel extends VmUtility.LocalizableViewModel {
 
     public refresh() {
         this.stageName(this.stageContext.currentStage.toString());
-        this.prompt(this.stageContext.prompt);
+        this.prompt(Ptag.parseMarkup(this.stageContext.prompt));
         let opts = <StageOptionViewModel[]>[];
         this.stageContext.options.forEach(opt => {
             opts.push(new StageOptionViewModel(opt, sender => {
@@ -75,20 +78,22 @@ class SaveLoadTabViewModel extends TabViewModel {
  */
 class PlayerViewModel extends VmUtility.LocalizableViewModel {
     public readonly currentStageVM: CurrentStageViewModel;
+    public readonly gameLang = ko.observable("");
+
     private readonly _engine = new Ptag.GameEngine();
 
     public constructor() {
         super();
         this.currentStageVM = new CurrentStageViewModel(this._engine.context, opt => { this.gotoStageAsync(opt.target); });
+        this.gameLang.subscribe(v => { this._engine.setCurrentLocaleAsync(v); });
     }
 
     // public get engine() { return this._engine; }
     public openGameAsync() {
-        let t = toastr.info("<span data-bind=\"LR('game_loading')\">Loading…</span>", null, { timeOut: 0 });
+        let t = toastr.info("<span data-bind=\"text: LC('game_loading')\">Loading…</span>", null, { timeOut: 0 });
+        this._engine.clear();
         return this._engine.openGameAsync(new URI(window.location.href).hash("").search("").filename("data/demo/game.json").toString())
-            .done(() => {
-                this.currentStageVM.refresh();
-            }).fail(VmUtility.showError)
+            .done(() => { this.currentStageVM.refresh(); }).fail(VmUtility.showError)
             .always(() => { t.hide(); });
     }
 
@@ -146,12 +151,14 @@ class PlayerViewModel extends VmUtility.LocalizableViewModel {
     }
 }
 
-LR.initializeAsync(navigator.language)
-    .done(() => { document.title = LR.getString("ptag"); })
+export let vm = new PlayerViewModel();
+
+let t1 = toastr.info("Loading localization resource…");
+vm.gameLang(navigator.language);
+Locale.initializeAsync().then(() => { return LR.initializeAsync(navigator.language); })
+    .always(() => { t1.hide(); })
+    .then(() => { document.title = LR.getString("ptag"); return vm.openGameAsync(); })
     .fail(VmUtility.showError);
 
-let vm = new PlayerViewModel();
-vm.openGameAsync();
 console.log(vm);
-
 ko.applyBindings(vm);

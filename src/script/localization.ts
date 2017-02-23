@@ -1,5 +1,6 @@
 /// <reference path="../../typings/index.d.ts"/>
 import * as Utility from "./utility";
+import * as Locale from "./locale";
 
 /**
  * localization/catalog.json Root.
@@ -14,13 +15,7 @@ interface LocalizationCatalog {
 
 type TextDict = { [key: string]: string | Array<string> };
 
-function fallbackLanguageTag(tag: string) {
-    let index = tag.lastIndexOf("-");
-    if (index <= 0) return "";
-    return tag.substr(0, index);
-}
-
-export class LocalizedResourceProvider {
+export class LocalizedResourceProvider implements Locale.LocaleAware {
 
     public static readonly LocalizedResourcePath = "data/localization";
     public static readonly FallbackLanguage = "en";
@@ -52,7 +47,7 @@ export class LocalizedResourceProvider {
         console.assert(!!this._catalog);
         value = (value || "").toLowerCase();
         while (value && this._catalog.languages.indexOf(value) < 0) {
-            let fb = this._catalog.fallbacks[value] || fallbackLanguageTag(value);
+            let fb = Locale.getSurrogateLanguage(value) || Locale.fallbackLanguageTag(value);
         }
         if (!value) {
             console.assert(this._catalog.languages.indexOf(LocalizedResourceProvider.FallbackLanguage) >= 0);

@@ -1,6 +1,14 @@
 {
     "name": "Warriors TAG",
     "description": "See http://warriors-tag.huiji.wiki .",
+    "lang": {
+        "default": "zh-cn",
+        "supported": [
+            "zh-cn",
+            "zh-tw",
+            "en-us"
+        ]
+    },
     "stageGroups": {
         "": "stage/main.json",
         "Kidnap": "stage/kidnap.json"

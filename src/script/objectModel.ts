@@ -4,13 +4,21 @@
 export interface GameMeta {
     name: string;
     description: string;
+    lang: GameLanguageInfo;
     stageGroups: { [name: string]: string };
 }
 
-// [stategroup].json
+export interface GameLanguageInfo {
+    default: string;
+    supported: string[];
+}
+
+// [stagegroup].json
 export interface StageGroup {
     stages: { [name: string]: GameStage };
+    // Runtime
     sourceUrl: string;
+    localized: { [locale: string]: LocalizedStageGroup };
 }
 
 export interface GameStage {
@@ -23,6 +31,18 @@ export interface GameStage {
 export interface StageOption {
     target: string;
     text: string;
+}
+
+// [stagegroup].[locale].json
+export interface LocalizedStageGroup {
+    stages: { [name: string]: LocalizedGameStage };
+    // Runtime
+    sourceUrl: string;
+}
+
+export interface LocalizedGameStage {
+    prompt: string;
+    options: string[];
 }
 
 export interface SessionSlot {

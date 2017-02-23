@@ -1,6 +1,7 @@
 {
     "ptag": "Plain Text Adventure Game",
     "game_loading": "Loading game…",
+    "game_session_override_prompt": "Do you wish to overwrite the saved session?",
     "game_session_load_prompt": "Current session will be lost. Do you wish to load the game?",
     "game_restart_prompt": "Do you wish to restart the game?",
     "game_restarted": "You have restared the game.",

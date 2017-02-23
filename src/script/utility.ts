@@ -1,9 +1,11 @@
 /// <reference path="../../typings/index.d.ts"/>
 
 export class NetError extends Error {
-    public constructor(public readonly status: string, public readonly url?: string) {
-        super(`Network error when requesting "${url}": ${status}.`);
+    public constructor(public readonly status: string, public readonly statusCode: number, public readonly url?: string) {
+        super(`Network error when requesting "${url}": ${status}. [${statusCode}]`);
     }
+
+    public get IsBadRequest() { return this.statusCode >= 400 && this.statusCode <= 499; }
 }
 
 export class ResourceMissingError extends Error {
@@ -12,12 +14,11 @@ export class ResourceMissingError extends Error {
     }
 }
 
-export function getJson(url: string) {
-    return $.getJSON(url).then(data => {
-        return data;
-    }, (xhr, status, err) => {
-        return new NetError(err || status, xhr.responseURL);
-    });
+export function getJson(url: string): JQueryPromise<any> {
+    let d = $.Deferred();
+    $.getJSON(url).then(data => d.resolve(data),
+        (xhr, status, err) => d.reject(new NetError(err || status, xhr.status, url)));
+    return d;
 }
 
 export function htmlEscape(unsafe: string) {
@@ -37,4 +38,26 @@ export function formatString() {
         content = content.replace(replacement, arguments[i]);
     }
     return content;
+}
+
+export function resolvePropertyPath(obj: any, path: string): any;
+export function resolvePropertyPath(obj: any, pathSegments: string[]): any;
+export function resolvePropertyPath(obj: any, pathOrSegments: string | string[]): any;
+export function resolvePropertyPath(obj: any, path: any) {
+    let v = obj;
+    let seg = path instanceof Array ? path : path.split("/");
+    for (let i = 0; i < seg.length; i++) {
+        v = v[seg[i]];
+        if (v === undefined || v === null) return v;
+    }
+    return v;
+}
+
+/**
+ * fileName.ext --> fileNameSuffix.ext
+ */
+export function fileNameAddSuffix(fileName: string, suffix: string) {
+    let pos = fileName.lastIndexOf(".");
+    if (pos < 0) return fileName + suffix;
+    return fileName.substring(0, pos) + suffix + fileName.substring(pos);
 }

@@ -1,6 +1,7 @@
 /// <reference path="../../typings/index.d.ts"/>
 import * as ObjectModel from "./objectModel";
 import * as Utility from "./utility";
+import * as Locale from "./locale";
 
 /**
  * An immutable strcutre of full game-stage name.
@@ -68,27 +69,50 @@ export class StageContext {
     public getAbsUrl(path: string) {
         return new URI(this.rootUrl).filename(path).toString();
     }
+    public clear() {
+        this.rootUrl = null;
+        this.currentStage = null;
+        this.stateStore = {};
+        this.prompt = null;
+        this.options = null;
+    }
     public constructor() {
-
+        this.clear();
     }
 }
 
 /**
  * The adventure game engine.
  */
-export class GameEngine {
-    private _context: StageContext;
+export class GameEngine implements Locale.LocaleAware {
+    private _context = new StageContext();
     private _game: ObjectModel.GameMeta;
-    private _loadedStageGroups: { [name: string]: ObjectModel.StageGroup | JQueryPromise<ObjectModel.StageGroup> };
+    private _loadedStageGroups: { [name: string]: ObjectModel.StageGroup } = {};
+    private _loadingStageGroups: { [name: string]: { [locale: string]: JQueryPromise<any> } } = {};
+    private _currentLocale = "";
 
     public constructor() {
         this.clear();
     }
 
+    public getCurrentLocale() {
+        return this._currentLocale;
+    }
+
+    public setCurrentLocaleAsync(locale: string) {
+        if (locale === this._currentLocale) return $.Deferred().resolve();
+        this._currentLocale = locale;
+        if (!!this._game) {
+            // TODO Distingush between GOTO and REFRESH the current stage.
+            return this.gotoStageAsync(this._context.currentStage);
+        }
+        return $.Deferred().resolve();
+    }
+
     public clear() {
-        this._context = new StageContext();
         this._loadedStageGroups = {};
         this._game = null;
+        this._context.clear();
     }
 
     public openGameAsync(url: string) {
@@ -99,20 +123,59 @@ export class GameEngine {
         });
     }
 
-    public getStageGroupAsync(groupName: string) {
-        if (!this._game) return $.Deferred().reject(new Error("Game is not ready."));
+    public tryGetLocalizedStageGroupAsync(groupName: string, locale: string): JQueryPromise<ObjectModel.LocalizedStageGroup> {
+        console.assert(!!this._game);
         let group = this._loadedStageGroups[groupName];
-        if (!group) {
-            let importUrl = this._game.stageGroups[groupName];
-            if (!importUrl) return $.Deferred().reject(new StageGroupMissingError(groupName));
-            return this._loadedStageGroups[groupName] = Utility.getJson(this._context.getAbsUrl(importUrl))
-                .then(json => { return this._loadedStageGroups[groupName] = <ObjectModel.StageGroup>json; });
+        if (group !== undefined) {
+            let lg = group.localized[locale];
+            if (lg) return $.Deferred().resolve(lg);
         }
-        if ((<JQueryPromise<ObjectModel.StageGroup>>group).then)
-            return <JQueryPromise<ObjectModel.StageGroup>>group;
-        else
-            return $.Deferred().resolve(group);
+        let dg = (this._loadingStageGroups[groupName] || {})[locale];
+        if (dg) return dg;
+        // Fetch
+        let importUrl = new URI(this._context.getAbsUrl(this._game.stageGroups[groupName]));
+        importUrl.filename(Utility.fileNameAddSuffix(importUrl.filename(), "." + locale));
+        if (!importUrl) return $.Deferred().reject(new StageGroupMissingError(groupName));
+        return this._loadingStageGroups[groupName][locale] = this.getStageGroupAsync(groupName).then(g => {
+            group = g;
+            return Utility.getJson(this._context.getAbsUrl(importUrl.toString()));
+        }).then(json => { return group.localized[locale] = json; }, err => {
+            console.log("tryGetLocalizedStageGroupAsync", err);
+            let netErr = <Utility.NetError>err;
+            // Resource not found, etc.
+            if (netErr.IsBadRequest) return group.localized[locale] = null;
+            // Network failure, perhaps.
+            return null;
+        });
     }
+
+    public getStageGroupAsync(groupName: string) {
+        console.assert(!!this._game);
+        let group = this._loadedStageGroups[groupName];
+        if (group) return $.Deferred().resolve(group);
+        let dg = (this._loadingStageGroups[groupName] || {})["*"];
+        if (dg) return dg;
+        let importUrl = this._game.stageGroups[groupName];
+        if (!importUrl) return $.Deferred().reject(new StageGroupMissingError(groupName));
+        if (!this._loadingStageGroups[groupName]) this._loadingStageGroups[groupName] = {};
+        return this._loadingStageGroups[groupName]["*"] = Utility.getJson(this._context.getAbsUrl(importUrl))
+            .then((json: ObjectModel.StageGroup) => {
+                json.sourceUrl = this._context.getAbsUrl(importUrl);
+                json.localized = {};
+                return this._loadedStageGroups[groupName] = json;
+            });
+    }
+
+    public getStageAsync(name: StageName): JQueryPromise<ObjectModel.GameStage> {
+        let d = $.Deferred();
+        this.getStageGroupAsync(name.groupName).then(group => {
+            let s = group.stages[name.localName];
+            if (s) d.resolve(s);
+            else d.reject(new StageMissingError(name));
+        }, fail => d.reject.apply(d, arguments));
+        return d;
+    }
+
     /**
      * Goes to the startup stage of the game.
      */
@@ -127,11 +190,28 @@ export class GameEngine {
         else
             name = new StageName(":");
         console.log("gotoStageAsync %s", name.toString());
-        return this.getStageGroupAsync(name.groupName).then(group => {
-            let stage = group.stages[name.localName];
+        let stage: ObjectModel.GameStage;
+        let newPrompt: string;
+        let newOptionsText: string[] = [];
+        return this.getStageAsync(name).then(s => {
+            stage = s;
+            newPrompt = stage.prompt;
+            newOptionsText = stage.options.map(opt => { return opt.text; });
+            if (!this._currentLocale || this._game.lang.default === this._currentLocale) return;
+            // Need localization
+            let ds = [this.getLocalizedStageGroupValueAsync(name.groupName, lsg => newPrompt = lsg.stages[name.localName].prompt)];
+            for (let i = 0; i < stage.options.length; i++) {
+                let i1 = i;
+                ds.push(this.getLocalizedStageGroupValueAsync(name.groupName, lsg =>
+                    newOptionsText[i1] = lsg.stages[name.localName].options[i1]));
+            }
+            return $.when.apply($, ds);
+        }).then(() => {
             if (stage) {
-                this._context.prompt = stage.prompt;
-                this._context.options = stage.options;
+                this._context.prompt = newPrompt;
+                this._context.options = stage.options.map((opt, i) => {
+                    return <ObjectModel.StageOption>{ target: opt.target, text: newOptionsText[i] };
+                });
                 // eval(stage.script);
                 this._context.currentStage = name;
                 return;
@@ -155,4 +235,41 @@ export class GameEngine {
     }
 
     public get context() { return this._context; }
+
+    private getLocalizedStageGroupValueAsync<T>(groupName: string,
+        selector: (lsg: ObjectModel.LocalizedStageGroup) => T, fallback?: T, locale?: string) {
+        locale = locale || this._currentLocale;
+        let attempts = 0;
+        //      0       original
+        //      1       surrogate
+        //      2       fallback + surrogate
+        let nextAttempt = (lsg: ObjectModel.LocalizedStageGroup) => {
+            if (!lsg) {
+                while (attempts < 2) {
+                    attempts++;
+                    let lc: string;
+                    switch (attempts) {
+                        case 1: lc = Locale.getSurrogateLanguage(locale); break;
+                        case 2: lc = Locale.getSurrogateLanguage(Locale.fallbackLanguageTag(locale)); break;
+                    }
+                    if (this._game.lang.supported.indexOf(locale) > 0) {
+                        console.log("getLocalizedStageGroupValueAsync", "try locale", lc);
+                        if (locale) return this.tryGetLocalizedStageGroupAsync(groupName, lc).then(nextAttempt);
+                    }
+                };
+                return fallback;
+            }
+            return selector(lsg);
+        };
+        return this.tryGetLocalizedStageGroupAsync(groupName, locale).then(nextAttempt);
+    }
+}
+
+/**
+ * Converts the short-hand markup to standard HTML.
+ */
+export function parseMarkup(mk: string) {
+    let x = $.parseXML("<root>" + mk + "</root>");
+    $("a[href]", x).attr("target", "_blank");
+    return x.documentElement.innerHTML;
 }
