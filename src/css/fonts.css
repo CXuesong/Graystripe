@@ -70,14 +70,18 @@
        url('../font/roboto-v15-greek_latin-ext_latin-700italic.woff2') format('woff2'), /* Chrome 26+, Opera 23+, Firefox 39+ */
        url('../font/roboto-v15-greek_latin-ext_latin-700italic.woff') format('woff'); /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */
 }
+
+/* 声明字体的时候，如果有 local() 且本机没有这个字体，
+则 UC浏览器（安卓） 不会继续拽下面引用的服务器上的字体文件，
+而是干脆啥也不干。 */
 /* fallback */
 @font-face {
   font-family: 'Material Icons';
   font-style: normal;
   font-weight: 400;
-  src: local('Material Icons'), local('MaterialIcons-Regular'),
+  src: /* local('Material Icons'), local('MaterialIcons-Regular'), */
       url(../font/Material_Icons.woff2) format('woff2'),
-       url(../font/Material_Icons.woff) format('woff');
+      url(../font/Material_Icons.woff) format('woff');
 }
 
 .material-icons {
@@ -92,6 +96,7 @@
   white-space: nowrap;
   word-wrap: normal;
   direction: ltr;
+  font-feature-settings: 'liga';
   -webkit-font-feature-settings: 'liga';
   -webkit-font-smoothing: antialiased;
 }

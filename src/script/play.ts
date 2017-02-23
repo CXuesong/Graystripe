@@ -1,7 +1,9 @@
 /// <reference path="../../typings/index.d.ts"/>
-import * as ObjectModel from "./objectModel";
 import * as Utility from "./utility";
+import * as VmUtility from "./vmUtility";
+import * as ObjectModel from "./objectModel";
 import * as Ptag from "./ptag";
+import { LR } from "./localization";
 
 class StageHistoryEntry {
     public constructor(public readonly description: string, public readonly selectedOption: string) { }
@@ -25,13 +27,14 @@ class StageOptionViewModel {
     }
 }
 
-class CurrentStageViewModel {
+class CurrentStageViewModel extends VmUtility.LocalizableViewModel {
     public readonly stageName = ko.observable("[stage]");
     public readonly prompt = ko.observable("[prompt]");
     public readonly options = ko.observableArray<StageOptionViewModel>();
 
     public constructor(public readonly stageContext: Ptag.StageContext,
         public readonly onOptionClick: (option: StageOptionViewModel) => void) {
+        super();
     }
 
     public refresh() {
@@ -47,7 +50,7 @@ class CurrentStageViewModel {
     }
 }
 
-class TabViewModel {
+class TabViewModel extends VmUtility.LocalizableViewModel {
     private _IsVisible = false;
 
     public get IsVisible() { return this._IsVisible; }
@@ -70,21 +73,22 @@ class SaveLoadTabViewModel extends TabViewModel {
 /**
  * play.html main VM.
  */
-class PlayerViewModel {
+class PlayerViewModel extends VmUtility.LocalizableViewModel {
     public readonly currentStageVM: CurrentStageViewModel;
     private readonly _engine = new Ptag.GameEngine();
 
     public constructor() {
+        super();
         this.currentStageVM = new CurrentStageViewModel(this._engine.context, opt => { this.gotoStageAsync(opt.target); });
     }
 
     // public get engine() { return this._engine; }
     public openGameAsync() {
-        let t = toastr.info("Loading game…", null, { timeOut: 0 });
+        let t = toastr.info("<span data-bind=\"LR('game_loading')\">Loading…</span>", null, { timeOut: 0 });
         return this._engine.openGameAsync(new URI(window.location.href).hash("").search("").filename("data/demo/game.json").toString())
             .done(() => {
                 this.currentStageVM.refresh();
-            }).fail(err => { toastr.error(err); })
+            }).fail(VmUtility.showError)
             .always(() => { t.hide(); });
     }
 
@@ -92,52 +96,59 @@ class PlayerViewModel {
         let name = new Ptag.StageName(targetStageName);
         let d = this._engine.gotoStageAsync(name);
         if (d.state() === "pending") {
-            let t = toastr.info(Utility.htmlEscape(name.toString()), "Loading stage…", { timeOut: 0 });
+            let t = toastr.info(Utility.htmlEscape(name.toString()), LR.getString("stage_loading"), { timeOut: 0 });
             d.always(() => { t.hide(); });
         }
         return d.done(() => {
             this.currentStageVM.refresh();
-        }).fail(err => { toastr.error(err); });
+        }).fail(VmUtility.showError);
     }
 
     public restartGame() {
-        if (!confirm("Do you wish to restart the game?"))
+        if (!confirm(LR.getString("game_restart_prompt")))
             return $.Deferred().resolve();
-        return this.gotoStageAsync(":").done(() => { toastr.success("You have restared the game."); });
+        return this.gotoStageAsync(":").done(() => { toastr.success(LR.getString("game_restarted")); });
     }
 
     public saveGame() {
         if (!store.enabled) {
-            toastr.error('Local storage is not supported by your browser. Please disable "Private Mode", or upgrade to a modern browser.');
+            toastr.error(LR.getString("local_storage_not_supported"));
             return;
         }
         let slot: ObjectModel.SessionSlot = <any>{};
         slot.time = new Date();
         slot.stageContext = this._engine.SaveContext();
         store.set("context", slot);
-        toastr.success("Session has been saved to your browser.");
+        toastr.success(LR.getString("game_session_saved"));
     }
 
     public loadGame() {
         if (!store.enabled) {
-            toastr.error('Local storage is not supported by your browser. Please disable "Private Mode", or upgrade to a modern browser.');
+            toastr.error(LR.getString("local_storage_not_supported"));
             return;
         }
         let slot: ObjectModel.SessionSlot = store.get("context");
         if (!slot) {
-            toastr.warning("No saved session to load.");
-            return $.Deferred().resolve();
+            toastr.warning(LR.getString("game_no_session_to_load"));
+            return $.Deferred().resolve(false);
         }
+        if (!window.confirm(LR.getString("game_session_load_prompt")))
+            return $.Deferred().resolve(false);
         ObjectModel.reconstructSessionSlot(slot);
-        console.log(slot);
+        // console.log(slot);
         return this._engine.LoadContextAsync(slot.stageContext)
             .done(() => {
                 this.currentStageVM.refresh();
-                toastr.success("Session has been loaded. <br />" + slot.time);
+                toastr.success(LR.getString("game_session_loaded"), slot.time.toString());
+                return true;
             })
-            .fail(err => { toastr.error(err); });
+            .fail(VmUtility.showError);
     }
 }
+
+LR.initializeAsync(navigator.language)
+    .done(() => { document.title = LR.getString("ptag"); })
+    .fail(VmUtility.showError);
 
 let vm = new PlayerViewModel();
 vm.openGameAsync();
