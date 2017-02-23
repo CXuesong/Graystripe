@@ -12,11 +12,9 @@ System.register([], function (exports_1, context_1) {
     })();
     var __moduleName = context_1 && context_1.id;
     function getJson(url) {
-        return $.getJSON(url).then(function (data) {
-            return data;
-        }, function (xhr, status, err) {
-            return new NetError(err || status, xhr.responseURL);
-        });
+        var d = $.Deferred();
+        $.getJSON(url).then(function (data) { return d.resolve(data); }, function (xhr, status, err) { return d.reject(new NetError(err || status, xhr.status, url)); });
+        return d;
     }
     exports_1("getJson", getJson);
     function htmlEscape(unsafe) {
@@ -37,18 +35,42 @@ System.register([], function (exports_1, context_1) {
         return content;
     }
     exports_1("formatString", formatString);
+    function resolvePropertyPath(obj, path) {
+        var v = obj;
+        var seg = path instanceof Array ? path : path.split("/");
+        for (var i = 0; i < seg.length; i++) {
+            v = v[seg[i]];
+            if (v === undefined || v === null)
+                return v;
+        }
+        return v;
+    }
+    exports_1("resolvePropertyPath", resolvePropertyPath);
+    function fileNameAddSuffix(fileName, suffix) {
+        var pos = fileName.lastIndexOf(".");
+        if (pos < 0)
+            return fileName + suffix;
+        return fileName.substring(0, pos) + suffix + fileName.substring(pos);
+    }
+    exports_1("fileNameAddSuffix", fileNameAddSuffix);
     var NetError, ResourceMissingError;
     return {
         setters: [],
         execute: function () {
             NetError = (function (_super) {
                 __extends(NetError, _super);
-                function NetError(status, url) {
-                    var _this = _super.call(this, "Network error when requesting \"" + url + "\": " + status + ".") || this;
+                function NetError(status, statusCode, url) {
+                    var _this = _super.call(this, "Network error when requesting \"" + url + "\": " + status + ". [" + statusCode + "]") || this;
                     _this.status = status;
+                    _this.statusCode = statusCode;
                     _this.url = url;
                     return _this;
                 }
+                Object.defineProperty(NetError.prototype, "IsBadRequest", {
+                    get: function () { return this.statusCode >= 400 && this.statusCode <= 499; },
+                    enumerable: true,
+                    configurable: true
+                });
                 return NetError;
             }(Error));
             exports_1("NetError", NetError);

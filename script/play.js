@@ -1,4 +1,4 @@
-System.register(["./utility", "./vmUtility", "./objectModel", "./ptag", "./localization"], function (exports_1, context_1) {
+System.register(["./utility", "./vmUtility", "./locale", "./objectModel", "./ptag", "./localization"], function (exports_1, context_1) {
     "use strict";
     var __extends = (this && this.__extends) || (function () {
         var extendStatics = Object.setPrototypeOf ||
@@ -11,7 +11,7 @@ System.register(["./utility", "./vmUtility", "./objectModel", "./ptag", "./local
         };
     })();
     var __moduleName = context_1 && context_1.id;
-    var Utility, VmUtility, ObjectModel, Ptag, localization_1, StageHistoryEntry, StageOptionViewModel, CurrentStageViewModel, TabViewModel, SaveLoadTabViewModel, PlayerViewModel, vm;
+    var Utility, VmUtility, Locale, ObjectModel, Ptag, localization_1, StageHistoryEntry, StageOptionViewModel, CurrentStageViewModel, TabViewModel, SaveLoadTabViewModel, PlayerViewModel, vm, t1;
     return {
         setters: [
             function (Utility_1) {
@@ -19,6 +19,9 @@ System.register(["./utility", "./vmUtility", "./objectModel", "./ptag", "./local
             },
             function (VmUtility_1) {
                 VmUtility = VmUtility_1;
+            },
+            function (Locale_1) {
+                Locale = Locale_1;
             },
             function (ObjectModel_1) {
                 ObjectModel = ObjectModel_1;
@@ -43,7 +46,9 @@ System.register(["./utility", "./vmUtility", "./objectModel", "./ptag", "./local
                     this.model = model;
                     this.onClick = onClick;
                     this.target = model.target;
-                    this.text = model.text || Utility.htmlEscape(this.target);
+                    this.text = model.text === null || model.text === undefined
+                        ? Utility.htmlEscape(this.target)
+                        : Ptag.parseMarkup(model.text);
                 }
                 StageOptionViewModel.prototype.notifyClick = function () {
                     if (this.onClick)
@@ -65,7 +70,7 @@ System.register(["./utility", "./vmUtility", "./objectModel", "./ptag", "./local
                 CurrentStageViewModel.prototype.refresh = function () {
                     var _this = this;
                     this.stageName(this.stageContext.currentStage.toString());
-                    this.prompt(this.stageContext.prompt);
+                    this.prompt(Ptag.parseMarkup(this.stageContext.prompt));
                     var opts = [];
                     this.stageContext.options.forEach(function (opt) {
                         opts.push(new StageOptionViewModel(opt, function (sender) {
@@ -115,17 +120,18 @@ System.register(["./utility", "./vmUtility", "./objectModel", "./ptag", "./local
                 __extends(PlayerViewModel, _super);
                 function PlayerViewModel() {
                     var _this = _super.call(this) || this;
+                    _this.gameLang = ko.observable("");
                     _this._engine = new Ptag.GameEngine();
                     _this.currentStageVM = new CurrentStageViewModel(_this._engine.context, function (opt) { _this.gotoStageAsync(opt.target); });
+                    _this.gameLang.subscribe(function (v) { _this._engine.setCurrentLocaleAsync(v); });
                     return _this;
                 }
                 PlayerViewModel.prototype.openGameAsync = function () {
                     var _this = this;
-                    var t = toastr.info("<span data-bind=\"LR('game_loading')\">Loading…</span>", null, { timeOut: 0 });
+                    var t = toastr.info("<span data-bind=\"text: LC('game_loading')\">Loading…</span>", null, { timeOut: 0 });
+                    this._engine.clear();
                     return this._engine.openGameAsync(new URI(window.location.href).hash("").search("").filename("data/demo/game.json").toString())
-                        .done(function () {
-                        _this.currentStageVM.refresh();
-                    }).fail(VmUtility.showError)
+                        .done(function () { _this.currentStageVM.refresh(); }).fail(VmUtility.showError)
                         .always(function () { t.hide(); });
                 };
                 PlayerViewModel.prototype.gotoStageAsync = function (targetStageName) {
@@ -180,11 +186,13 @@ System.register(["./utility", "./vmUtility", "./objectModel", "./ptag", "./local
                 };
                 return PlayerViewModel;
             }(VmUtility.LocalizableViewModel));
-            localization_1.LR.initializeAsync(navigator.language)
-                .done(function () { document.title = localization_1.LR.getString("ptag"); })
+            exports_1("vm", vm = new PlayerViewModel());
+            t1 = toastr.info("Loading localization resource…");
+            vm.gameLang(navigator.language);
+            Locale.initializeAsync().then(function () { return localization_1.LR.initializeAsync(navigator.language); })
+                .always(function () { t1.hide(); })
+                .then(function () { document.title = localization_1.LR.getString("ptag"); return vm.openGameAsync(); })
                 .fail(VmUtility.showError);
-            vm = new PlayerViewModel();
-            vm.openGameAsync();
             console.log(vm);
             ko.applyBindings(vm);
         }

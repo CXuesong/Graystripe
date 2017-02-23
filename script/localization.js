@@ -1,17 +1,14 @@
-System.register(["./utility"], function (exports_1, context_1) {
+System.register(["./utility", "./locale"], function (exports_1, context_1) {
     "use strict";
     var __moduleName = context_1 && context_1.id;
-    function fallbackLanguageTag(tag) {
-        var index = tag.lastIndexOf("-");
-        if (index <= 0)
-            return "";
-        return tag.substr(0, index);
-    }
-    var Utility, LocalizedResourceProvider, LR;
+    var Utility, Locale, LocalizedResourceProvider, LR;
     return {
         setters: [
             function (Utility_1) {
                 Utility = Utility_1;
+            },
+            function (Locale_1) {
+                Locale = Locale_1;
             }
         ],
         execute: function () {
@@ -37,7 +34,7 @@ System.register(["./utility"], function (exports_1, context_1) {
                     console.assert(!!this._catalog);
                     value = (value || "").toLowerCase();
                     while (value && this._catalog.languages.indexOf(value) < 0) {
-                        var fb = this._catalog.fallbacks[value] || fallbackLanguageTag(value);
+                        var fb = Locale.getSurrogateLanguage(value) || Locale.fallbackLanguageTag(value);
                     }
                     if (!value) {
                         console.assert(this._catalog.languages.indexOf(LocalizedResourceProvider.FallbackLanguage) >= 0);
