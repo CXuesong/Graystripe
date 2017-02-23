@@ -168,11 +168,12 @@ export class GameEngine implements Locale.LocaleAware {
 
     public getStageAsync(name: StageName): JQueryPromise<ObjectModel.GameStage> {
         let d = $.Deferred();
+        // The 'arguments' object cannot be referenced in an arrow function in ES3 and ES5.
         this.getStageGroupAsync(name.groupName).then(group => {
             let s = group.stages[name.localName];
             if (s) d.resolve(s);
             else d.reject(new StageMissingError(name));
-        }, fail => d.reject.apply(d, arguments));
+        }, function () { d.reject.apply(d, arguments); });
         return d;
     }
 
@@ -243,7 +244,7 @@ export class GameEngine implements Locale.LocaleAware {
         //      0       original
         //      1       surrogate
         //      2       fallback + surrogate
-        let nextAttempt = (lsg: ObjectModel.LocalizedStageGroup) => {
+        let nextAttempt = (lsg: ObjectModel.LocalizedStageGroup): T | JQueryPromise<T> => {
             if (!lsg) {
                 while (attempts < 2) {
                     attempts++;
