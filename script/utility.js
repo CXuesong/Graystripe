@@ -28,6 +28,15 @@ System.register([], function (exports_1, context_1) {
             .replace(/'/g, "&#039;");
     }
     exports_1("htmlEscape", htmlEscape);
+    function formatString() {
+        var content = arguments[0];
+        for (var i = 1; i < arguments.length; i++) {
+            var replacement = "{" + (i - 1) + "}";
+            content = content.replace(replacement, arguments[i]);
+        }
+        return content;
+    }
+    exports_1("formatString", formatString);
     var NetError, ResourceMissingError;
     return {
         setters: [],

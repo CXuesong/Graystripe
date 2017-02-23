@@ -1,4 +1,4 @@
-System.register(["./objectModel", "./utility", "./ptag"], function (exports_1, context_1) {
+System.register(["./utility", "./vmUtility", "./objectModel", "./ptag", "./localization"], function (exports_1, context_1) {
     "use strict";
     var __extends = (this && this.__extends) || (function () {
         var extendStatics = Object.setPrototypeOf ||
@@ -11,17 +11,23 @@ System.register(["./objectModel", "./utility", "./ptag"], function (exports_1, c
         };
     })();
     var __moduleName = context_1 && context_1.id;
-    var ObjectModel, Utility, Ptag, StageHistoryEntry, StageOptionViewModel, CurrentStageViewModel, TabViewModel, SaveLoadTabViewModel, PlayerViewModel, vm;
+    var Utility, VmUtility, ObjectModel, Ptag, localization_1, StageHistoryEntry, StageOptionViewModel, CurrentStageViewModel, TabViewModel, SaveLoadTabViewModel, PlayerViewModel, vm;
     return {
         setters: [
-            function (ObjectModel_1) {
-                ObjectModel = ObjectModel_1;
-            },
             function (Utility_1) {
                 Utility = Utility_1;
             },
+            function (VmUtility_1) {
+                VmUtility = VmUtility_1;
+            },
+            function (ObjectModel_1) {
+                ObjectModel = ObjectModel_1;
+            },
             function (Ptag_1) {
                 Ptag = Ptag_1;
+            },
+            function (localization_1_1) {
+                localization_1 = localization_1_1;
             }
         ],
         execute: function () {
@@ -45,13 +51,16 @@ System.register(["./objectModel", "./utility", "./ptag"], function (exports_1, c
                 };
                 return StageOptionViewModel;
             }());
-            CurrentStageViewModel = (function () {
+            CurrentStageViewModel = (function (_super) {
+                __extends(CurrentStageViewModel, _super);
                 function CurrentStageViewModel(stageContext, onOptionClick) {
-                    this.stageContext = stageContext;
-                    this.onOptionClick = onOptionClick;
-                    this.stageName = ko.observable("[stage]");
-                    this.prompt = ko.observable("[prompt]");
-                    this.options = ko.observableArray();
+                    var _this = _super.call(this) || this;
+                    _this.stageContext = stageContext;
+                    _this.onOptionClick = onOptionClick;
+                    _this.stageName = ko.observable("[stage]");
+                    _this.prompt = ko.observable("[prompt]");
+                    _this.options = ko.observableArray();
+                    return _this;
                 }
                 CurrentStageViewModel.prototype.refresh = function () {
                     var _this = this;
@@ -66,10 +75,13 @@ System.register(["./objectModel", "./utility", "./ptag"], function (exports_1, c
                     this.options(opts);
                 };
                 return CurrentStageViewModel;
-            }());
-            TabViewModel = (function () {
+            }(VmUtility.LocalizableViewModel));
+            TabViewModel = (function (_super) {
+                __extends(TabViewModel, _super);
                 function TabViewModel() {
-                    this._IsVisible = false;
+                    var _this = _super !== null && _super.apply(this, arguments) || this;
+                    _this._IsVisible = false;
+                    return _this;
                 }
                 Object.defineProperty(TabViewModel.prototype, "IsVisible", {
                     get: function () { return this._IsVisible; },
@@ -88,7 +100,7 @@ System.register(["./objectModel", "./utility", "./ptag"], function (exports_1, c
                 TabViewModel.prototype.onShow = function () { };
                 TabViewModel.prototype.onHide = function () { };
                 return TabViewModel;
-            }());
+            }(VmUtility.LocalizableViewModel));
             SaveLoadTabViewModel = (function (_super) {
                 __extends(SaveLoadTabViewModel, _super);
                 function SaveLoadTabViewModel() {
@@ -99,19 +111,21 @@ System.register(["./objectModel", "./utility", "./ptag"], function (exports_1, c
                 }
                 return SaveLoadTabViewModel;
             }(TabViewModel));
-            PlayerViewModel = (function () {
+            PlayerViewModel = (function (_super) {
+                __extends(PlayerViewModel, _super);
                 function PlayerViewModel() {
-                    var _this = this;
-                    this._engine = new Ptag.GameEngine();
-                    this.currentStageVM = new CurrentStageViewModel(this._engine.context, function (opt) { _this.gotoStageAsync(opt.target); });
+                    var _this = _super.call(this) || this;
+                    _this._engine = new Ptag.GameEngine();
+                    _this.currentStageVM = new CurrentStageViewModel(_this._engine.context, function (opt) { _this.gotoStageAsync(opt.target); });
+                    return _this;
                 }
                 PlayerViewModel.prototype.openGameAsync = function () {
                     var _this = this;
-                    var t = toastr.info("Loading game…", null, { timeOut: 0 });
+                    var t = toastr.info("<span data-bind=\"LR('game_loading')\">Loading…</span>", null, { timeOut: 0 });
                     return this._engine.openGameAsync(new URI(window.location.href).hash("").search("").filename("data/demo/game.json").toString())
                         .done(function () {
                         _this.currentStageVM.refresh();
-                    }).fail(function (err) { toastr.error(err); })
+                    }).fail(VmUtility.showError)
                         .always(function () { t.hide(); });
                 };
                 PlayerViewModel.prototype.gotoStageAsync = function (targetStageName) {
@@ -119,51 +133,56 @@ System.register(["./objectModel", "./utility", "./ptag"], function (exports_1, c
                     var name = new Ptag.StageName(targetStageName);
                     var d = this._engine.gotoStageAsync(name);
                     if (d.state() === "pending") {
-                        var t_1 = toastr.info(Utility.htmlEscape(name.toString()), "Loading stage…", { timeOut: 0 });
+                        var t_1 = toastr.info(Utility.htmlEscape(name.toString()), localization_1.LR.getString("stage_loading"), { timeOut: 0 });
                         d.always(function () { t_1.hide(); });
                     }
                     return d.done(function () {
                         _this.currentStageVM.refresh();
-                    }).fail(function (err) { toastr.error(err); });
+                    }).fail(VmUtility.showError);
                 };
                 PlayerViewModel.prototype.restartGame = function () {
-                    if (!confirm("Do you wish to restart the game?"))
+                    if (!confirm(localization_1.LR.getString("game_restart_prompt")))
                         return $.Deferred().resolve();
-                    return this.gotoStageAsync(":").done(function () { toastr.success("You have restared the game."); });
+                    return this.gotoStageAsync(":").done(function () { toastr.success(localization_1.LR.getString("game_restarted")); });
                 };
                 PlayerViewModel.prototype.saveGame = function () {
                     if (!store.enabled) {
-                        toastr.error('Local storage is not supported by your browser. Please disable "Private Mode", or upgrade to a modern browser.');
+                        toastr.error(localization_1.LR.getString("local_storage_not_supported"));
                         return;
                     }
                     var slot = {};
                     slot.time = new Date();
                     slot.stageContext = this._engine.SaveContext();
                     store.set("context", slot);
-                    toastr.success("Session has been saved to your browser.");
+                    toastr.success(localization_1.LR.getString("game_session_saved"));
                 };
                 PlayerViewModel.prototype.loadGame = function () {
                     var _this = this;
                     if (!store.enabled) {
-                        toastr.error('Local storage is not supported by your browser. Please disable "Private Mode", or upgrade to a modern browser.');
+                        toastr.error(localization_1.LR.getString("local_storage_not_supported"));
                         return;
                     }
                     var slot = store.get("context");
                     if (!slot) {
-                        toastr.warning("No saved session to load.");
-                        return $.Deferred().resolve();
+                        toastr.warning(localization_1.LR.getString("game_no_session_to_load"));
+                        return $.Deferred().resolve(false);
                     }
+                    if (!window.confirm(localization_1.LR.getString("game_session_load_prompt")))
+                        return $.Deferred().resolve(false);
                     ObjectModel.reconstructSessionSlot(slot);
-                    console.log(slot);
                     return this._engine.LoadContextAsync(slot.stageContext)
                         .done(function () {
                         _this.currentStageVM.refresh();
-                        toastr.success("Session has been loaded. <br />" + slot.time);
+                        toastr.success(localization_1.LR.getString("game_session_loaded"), slot.time.toString());
+                        return true;
                     })
-                        .fail(function (err) { toastr.error(err); });
+                        .fail(VmUtility.showError);
                 };
                 return PlayerViewModel;
-            }());
+            }(VmUtility.LocalizableViewModel));
+            localization_1.LR.initializeAsync(navigator.language)
+                .done(function () { document.title = localization_1.LR.getString("ptag"); })
+                .fail(VmUtility.showError);
             vm = new PlayerViewModel();
             vm.openGameAsync();
             console.log(vm);

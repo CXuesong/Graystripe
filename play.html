@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>Play</title>
+    <title>PTAG</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- Material Design fonts -->
@@ -42,7 +42,7 @@
                     <i class="material-icons">menu</i>
                 </button>
                 <ul class="nav navbar-nav">
-                    <li class="nav-item">PTAG</li>
+                    <li class="nav-item" data-bind="text: LC('ptag')">PTAG</li>
                 </ul>
                 <ul class="nav navbar-nav pull-xs-right">
                     <li class="nav-item">
@@ -64,10 +64,10 @@
                 <a class="navbar-brand">Menu</a>
             </header>
             <ul class="list-group">
-                <a class="list-group-item list-group-item-action" href="#" data-bind="click: saveGame">Save</a>
-                <a class="list-group-item list-group-item-action" href="#" data-bind="click: loadGame">Load</a>
+                <a class="list-group-item list-group-item-action" href="#" data-bind="text: LC('game_save_session'), click: saveGame">Save</a>
+                <a class="list-group-item list-group-item-action" href="#" data-bind="text: LC('game_load_session'), click: loadGame">Load</a>
                 <div class="dropdown-divider"></div>
-                <a class="list-group-item list-group-item-action" href="#" data-bind="click: restartGame">Restart</a>
+                <a class="list-group-item list-group-item-action" href="#" data-bind="text: LC('game_restart'), click: restartGame">Restart</a>
             </ul>
         </div>
         <main class="bmd-layout-content">
