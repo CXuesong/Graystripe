@@ -61,3 +61,10 @@ export function fileNameAddSuffix(fileName: string, suffix: string) {
     if (pos < 0) return fileName + suffix;
     return fileName.substring(0, pos) + suffix + fileName.substring(pos);
 }
+
+export function XmlToString(element: Node) {
+    let a = <any>element;
+    if (a.xml !== undefined) return a.xml;
+    if (XMLSerializer) return (new XMLSerializer()).serializeToString(element);
+    throw new TypeError("Cannot convert XML to string.");
+}

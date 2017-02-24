@@ -198,7 +198,7 @@ export class GameEngine implements Locale.LocaleAware {
             stage = s;
             newPrompt = stage.prompt;
             newOptionsText = stage.options.map(opt => { return opt.text; });
-            if (!this._currentLocale || this._game.lang.default === this._currentLocale) return;
+            if (!this._currentLocale || Locale.LanguageTagEquals(this._game.lang.default, this._currentLocale)) return;
             // Need localization
             let ds = [this.getLocalizedStageGroupValueAsync(name.groupName, lsg => newPrompt = lsg.stages[name.localName].prompt)];
             for (let i = 0; i < stage.options.length; i++) {
@@ -241,28 +241,32 @@ export class GameEngine implements Locale.LocaleAware {
         selector: (lsg: ObjectModel.LocalizedStageGroup) => T, fallback?: T, locale?: string) {
         locale = locale || this._currentLocale;
         let attempts = 0;
+        //  states
         //      0       original
         //      1       surrogate
         //      2       fallback + surrogate
         let nextAttempt = (lsg: ObjectModel.LocalizedStageGroup): T | JQueryPromise<T> => {
             if (!lsg) {
                 while (attempts < 2) {
-                    attempts++;
                     let lc: string;
                     switch (attempts) {
+                        case 0: break;
                         case 1: lc = Locale.getSurrogateLanguage(locale); break;
                         case 2: lc = Locale.getSurrogateLanguage(Locale.fallbackLanguageTag(locale)); break;
                     }
-                    if (this._game.lang.supported.indexOf(locale) > 0) {
-                        console.log("getLocalizedStageGroupValueAsync", "try locale", lc);
-                        if (locale) return this.tryGetLocalizedStageGroupAsync(groupName, lc).then(nextAttempt);
+                    // Next state
+                    attempts++;
+                    let nlc = Locale.FindLanguageTag(lc, this._game.lang.supported);
+                    if (nlc) {
+                        console.log("getLocalizedStageGroupValueAsync", "try locale", nlc);
+                        if (locale) return this.tryGetLocalizedStageGroupAsync(groupName, nlc).then(nextAttempt);
                     }
                 };
                 return fallback;
             }
             return selector(lsg);
         };
-        return this.tryGetLocalizedStageGroupAsync(groupName, locale).then(nextAttempt);
+        return $.Deferred().resolve().then(nextAttempt);
     }
 }
 
@@ -270,7 +274,7 @@ export class GameEngine implements Locale.LocaleAware {
  * Converts the short-hand markup to standard HTML.
  */
 export function parseMarkup(mk: string) {
-    let x = $.parseXML("<root>" + mk + "</root>");
+    let x = $.parseXML("<div>" + mk + "</div>");
     $("a[href]", x).attr("target", "_blank");
-    return x.documentElement.innerHTML;
+    return Utility.XmlToString(x);
 }

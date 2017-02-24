@@ -26,3 +26,14 @@ export interface LocaleAware {
     getCurrentLocale(): void;
     setCurrentLocaleAsync(locale: string): void;
 }
+
+export function LanguageTagEquals(x: string, y: string) {
+    return x.toLowerCase() === y.toLowerCase();
+}
+
+export function FindLanguageTag(x: string, tags: string[]) {
+    for (let i = 0; i < tags.length; i++) {
+        if (LanguageTagEquals(x, tags[i])) return tags[i];
+    }
+    return null;
+}
