@@ -12,9 +12,9 @@ System.register(["./utility", "./locale"], function (exports_1, context_1) {
     })();
     var __moduleName = context_1 && context_1.id;
     function parseMarkup(mk) {
-        var x = $.parseXML("<root>" + mk + "</root>");
+        var x = $.parseXML("<div>" + mk + "</div>");
         $("a[href]", x).attr("target", "_blank");
-        return x.documentElement.innerHTML;
+        return Utility.XmlToString(x);
     }
     exports_1("parseMarkup", parseMarkup);
     var Utility, Locale, StageName, StageMissingError, StageGroupMissingError, StageContext, GameEngine;
@@ -218,7 +218,7 @@ System.register(["./utility", "./locale"], function (exports_1, context_1) {
                         stage = s;
                         newPrompt = stage.prompt;
                         newOptionsText = stage.options.map(function (opt) { return opt.text; });
-                        if (!_this._currentLocale || _this._game.lang.default === _this._currentLocale)
+                        if (!_this._currentLocale || Locale.LanguageTagEquals(_this._game.lang.default, _this._currentLocale))
                             return;
                         var ds = [_this.getLocalizedStageGroupValueAsync(name.groupName, function (lsg) { return newPrompt = lsg.stages[name.localName].prompt; })];
                         var _loop_1 = function (i) {
@@ -262,9 +262,9 @@ System.register(["./utility", "./locale"], function (exports_1, context_1) {
                     var nextAttempt = function (lsg) {
                         if (!lsg) {
                             while (attempts < 2) {
-                                attempts++;
                                 var lc = void 0;
                                 switch (attempts) {
+                                    case 0: break;
                                     case 1:
                                         lc = Locale.getSurrogateLanguage(locale);
                                         break;
@@ -272,10 +272,12 @@ System.register(["./utility", "./locale"], function (exports_1, context_1) {
                                         lc = Locale.getSurrogateLanguage(Locale.fallbackLanguageTag(locale));
                                         break;
                                 }
-                                if (_this._game.lang.supported.indexOf(locale) > 0) {
-                                    console.log("getLocalizedStageGroupValueAsync", "try locale", lc);
+                                attempts++;
+                                var nlc = Locale.FindLanguageTag(lc, _this._game.lang.supported);
+                                if (nlc) {
+                                    console.log("getLocalizedStageGroupValueAsync", "try locale", nlc);
                                     if (locale)
-                                        return _this.tryGetLocalizedStageGroupAsync(groupName, lc).then(nextAttempt);
+                                        return _this.tryGetLocalizedStageGroupAsync(groupName, nlc).then(nextAttempt);
                                 }
                             }
                             ;
@@ -283,7 +285,7 @@ System.register(["./utility", "./locale"], function (exports_1, context_1) {
                         }
                         return selector(lsg);
                     };
-                    return this.tryGetLocalizedStageGroupAsync(groupName, locale).then(nextAttempt);
+                    return $.Deferred().resolve().then(nextAttempt);
                 };
                 return GameEngine;
             }());

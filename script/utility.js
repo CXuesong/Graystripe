@@ -53,6 +53,15 @@ System.register([], function (exports_1, context_1) {
         return fileName.substring(0, pos) + suffix + fileName.substring(pos);
     }
     exports_1("fileNameAddSuffix", fileNameAddSuffix);
+    function XmlToString(element) {
+        var a = element;
+        if (a.xml !== undefined)
+            return a.xml;
+        if (XMLSerializer)
+            return (new XMLSerializer()).serializeToString(element);
+        throw new TypeError("Cannot convert XML to string.");
+    }
+    exports_1("XmlToString", XmlToString);
     var NetError, ResourceMissingError;
     return {
         setters: [],

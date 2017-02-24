@@ -16,6 +16,18 @@ System.register(["./utility"], function (exports_1, context_1) {
         return locale.surrogates[languageTag] || null;
     }
     exports_1("getSurrogateLanguage", getSurrogateLanguage);
+    function LanguageTagEquals(x, y) {
+        return x.toLowerCase() === y.toLowerCase();
+    }
+    exports_1("LanguageTagEquals", LanguageTagEquals);
+    function FindLanguageTag(x, tags) {
+        for (var i = 0; i < tags.length; i++) {
+            if (LanguageTagEquals(x, tags[i]))
+                return tags[i];
+        }
+        return null;
+    }
+    exports_1("FindLanguageTag", FindLanguageTag);
     var Utility, locale;
     return {
         setters: [
