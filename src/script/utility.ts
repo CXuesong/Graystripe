@@ -68,3 +68,11 @@ export function XmlToString(element: Node) {
     if (XMLSerializer) return (new XMLSerializer()).serializeToString(element);
     throw new TypeError("Cannot convert XML to string.");
 }
+
+export function delayAsync(milliseconds: number): JQueryPromise<void> {
+    let d = $.Deferred<void>();
+    setTimeout(function() {
+        d.resolve();
+    }, milliseconds);
+    return d;
+}

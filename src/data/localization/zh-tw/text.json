@@ -13,5 +13,6 @@
     "game_load_session": "載入進度",
     "game_restart": "返回到開頭",
     "stage_loading": "載入場景……",
+    "close": "關閉",
     "": "" /* JSON 占位符 */
 }

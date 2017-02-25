@@ -1,4 +1,6 @@
 /// <reference path="../../typings/index.d.ts"/>
+/// <reference path="../lib/HTMLDialogElement.d.ts"/>
+
 import * as Utility from "./utility";
 import * as VmUtility from "./vmUtility";
 import * as Locale from "./locale";
@@ -41,15 +43,20 @@ class CurrentStageViewModel extends VmUtility.LocalizableViewModel {
     }
 
     public refresh() {
-        this.stageName(this.stageContext.currentStage.toString());
-        this.prompt(Ptag.parseMarkup(this.stageContext.prompt));
-        let opts = <StageOptionViewModel[]>[];
-        this.stageContext.options.forEach(opt => {
-            opts.push(new StageOptionViewModel(opt, sender => {
-                this.onOptionClick(sender);
-            }));
-        });
-        this.options(opts);
+        try {
+            this.stageName(this.stageContext.currentStage.toString());
+            this.prompt(Ptag.parseMarkup(this.stageContext.prompt));
+            let opts = <StageOptionViewModel[]>[];
+            this.stageContext.options.forEach(opt => {
+                opts.push(new StageOptionViewModel(opt, sender => {
+                    this.onOptionClick(sender);
+                }));
+            });
+            this.options(opts);
+        } catch (err) {
+            // E.g. XML parsing error
+            VmUtility.showError(err);
+        }
     }
 }
 
@@ -73,11 +80,38 @@ class SaveLoadTabViewModel extends TabViewModel {
     public readonly Slots = ko.observableArray();
 }
 
+class LanguageSettingsDialogViewModel extends VmUtility.LocalizableViewModel {
+    // tslint:disable-next-line:member-ordering
+    public selectedUILanguage = ko.observable("");
+    public selectedGameLanguage = ko.observable("");
+    public uiLanguages = ko.observableArray<[string, string]>();
+    public gameLanguages = ko.observableArray<[string, string]>();
+
+    public constructor() {
+        super();
+    }
+
+    public prepare(uiLanguages: string[], gameLanguages: string[]) {
+        let mapping = (lang: string) => {
+            lang = Locale.normalizeLanguageTag(lang);
+            return <[string, string]>[lang, lang];
+        };
+        this.uiLanguages(uiLanguages.map(mapping).sort((a, b) => a[0] > b[0] ? 1 : (a[0] < b[0] ? -1 : 0)));
+        this.gameLanguages(gameLanguages.map(mapping).sort((a, b) => a[0] > b[0] ? 1 : (a[0] < b[0] ? -1 : 0)));
+    }
+
+    public cleanup() {
+        this.uiLanguages.removeAll();
+        this.gameLanguages.removeAll();
+    }
+}
+
 /**
  * play.html main VM.
  */
 class PlayerViewModel extends VmUtility.LocalizableViewModel {
     public readonly currentStageVM: CurrentStageViewModel;
+    public readonly languageSettingsDialogVM = new LanguageSettingsDialogViewModel();
     public readonly gameLang = ko.observable("");
 
     private readonly _engine = new Ptag.GameEngine();
@@ -122,7 +156,7 @@ class PlayerViewModel extends VmUtility.LocalizableViewModel {
         }
         let slot: ObjectModel.SessionSlot = <any>{};
         slot.time = new Date();
-        slot.stageContext = this._engine.SaveContext();
+        slot.stageContext = this._engine.saveContext();
         store.set("context", slot);
         toastr.success(LR.getString("game_session_saved"));
     }
@@ -141,13 +175,40 @@ class PlayerViewModel extends VmUtility.LocalizableViewModel {
             return $.Deferred().resolve(false);
         ObjectModel.reconstructSessionSlot(slot);
         // console.log(slot);
-        return this._engine.LoadContextAsync(slot.stageContext)
+        return this._engine.loadContextAsync(slot.stageContext)
             .done(() => {
                 this.currentStageVM.refresh();
                 toastr.success(LR.getString("game_session_loaded"), slot.time.toString());
                 return true;
             })
             .fail(VmUtility.showError);
+    }
+
+    public showLanguageSettingsDialog() {
+        let dlg = <HTMLDialogElement>document.getElementById("lang-settings-dialog");
+        if (dlg.open) return;
+        dlg.showModal();
+        // ISSUE: showModal then do the bindings, or the drop-down of <select> will automatically open
+        // the issue is caused by ko & mdl-selectfield .
+        Utility.delayAsync(10).then(() => {
+            let vm = this.languageSettingsDialogVM;
+            vm.prepare(LR.supportedLocales, this._engine.supportedLocales);
+            return Utility.delayAsync(10).then(() => {
+                console.log(LR.getCurrentLocale());
+                console.log(this._engine.getCurrentLocale());
+                vm.selectedUILanguage(LR.getCurrentLocale());
+                vm.selectedGameLanguage(this._engine.getCurrentLocale());
+                VmUtility.mdlSelectNotifyChanged(dlg);
+                let sub1 = vm.selectedUILanguage.subscribe(lang => LR.setCurrentLocaleAsync(lang));
+                let sub2 = vm.selectedGameLanguage.subscribe(lang =>
+                    this._engine.setCurrentLocaleAsync(lang)
+                        .then(() => this.currentStageVM.refresh()));
+                $(dlg).on("close", () => {
+                    sub1.dispose();
+                    sub2.dispose();
+                });
+            });
+        });
     }
 }
 
@@ -162,3 +223,4 @@ Locale.initializeAsync().then(() => { return LR.initializeAsync(navigator.langua
 
 console.log(vm);
 ko.applyBindings(vm);
+

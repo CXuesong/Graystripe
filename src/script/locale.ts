@@ -27,13 +27,17 @@ export interface LocaleAware {
     setCurrentLocaleAsync(locale: string): void;
 }
 
-export function LanguageTagEquals(x: string, y: string) {
+export function languageTagEquals(x: string, y: string) {
     return x.toLowerCase() === y.toLowerCase();
 }
 
-export function FindLanguageTag(x: string, tags: string[]) {
+export function findLanguageTag(x: string, tags: string[]) {
     for (let i = 0; i < tags.length; i++) {
-        if (LanguageTagEquals(x, tags[i])) return tags[i];
+        if (languageTagEquals(x, tags[i])) return tags[i];
     }
     return null;
+}
+
+export function normalizeLanguageTag(tag: string) {
+    return tag.toLowerCase();
 }

@@ -13,5 +13,6 @@
     "game_load_session": "Load",
     "game_restart": "Restart",
     "stage_loading": "Loading stage…",
+    "close": "Close",
     "": "" /* JSON placeholder */
 }

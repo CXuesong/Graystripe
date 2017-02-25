@@ -45,7 +45,7 @@ export class LocalizedResourceProvider implements Locale.LocaleAware {
 
     public setCurrentLocaleAsync(value: string) {
         console.assert(!!this._catalog);
-        value = (value || "").toLowerCase();
+        value = Locale.normalizeLanguageTag(value || "");
         while (value && this._catalog.languages.indexOf(value) < 0) {
             let fb = Locale.getSurrogateLanguage(value) || Locale.fallbackLanguageTag(value);
         }
@@ -105,6 +105,10 @@ export class LocalizedResourceProvider implements Locale.LocaleAware {
     private fetchResourceDictAsync(locale: string) {
         console.assert(!!locale);
         return Utility.getJson(`${LocalizedResourceProvider.LocalizedResourcePath}/${locale}/text.json`);
+    }
+
+    public get supportedLocales() {
+        return this._catalog.languages;
     }
 }
 

@@ -6,6 +6,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta http-equiv="refresh" content="0; url=play.html" />
+    <link rel="stylesheet" href="css/fonts.css">
+    <link rel="stylesheet" href="css/site.css">
     <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/material-design-lite/1.3.0/material.indigo-pink.min.css" integrity="sha256-TsamlRXOM65Pf69+MM9GIrkPUQscLDvQjgX60EpuWfk="
         crossorigin="anonymous" async />
     <script src="//cdnjs.cloudflare.com/ajax/libs/material-design-lite/1.3.0/material.min.js" integrity="sha256-PCfu4+fnQrp4wNmVbjN1eaX4LbOvOejab0UOhjLezrw="
@@ -35,9 +37,13 @@
 </head>
 
 <body>
-    <h1>Now Loading…</h1>
-    <p class="lead">Please wait for a moment.</p>
-    <p class="lead">You can also <a href="play.html">click here</a> to proceed.</p>
+    <div class="mdl-progress mdl-js-progress mdl-progress__indeterminate" style="width: 100%;"></div>
+    <div style="text-align: center; margin: 1em 0">
+        <p><i class="material-icons">hourglass_empty</i></p>
+        <h1>Now Loading</h1>
+        <p class="lead">Please wait for a moment.</p>
+        <p class="lead">You can also <a href="play.html">click here</a> to proceed.</p>
+    </div>
 </body>
 
 </html>
