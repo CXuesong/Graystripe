@@ -1,0 +1,31 @@
+{
+    "stages": {
+        "": {
+            "prompt": "<p>This is a demo game-book for an exprimental text adventure game engine. You may find the game-book (in Chinese) <a href=\"https://github.com/CXuesong/Graystripe/tree/master/src/data/demo\">here</a>.</p><p>The game book is heavily based on the content on <a href=\"http://warriors-tag.huiji.wiki\">this wiki site</a>, to whose contributors I should say <em>thanks a lot</em>.</p><p>Please, select an option to continue.</p>",
+            "options": [
+                "Dream1"
+            ]
+        },
+        "Dream1": {
+            "prompt": "<p>It was dark all over. Rusty felt something rustling nearby, where there were dense bushes almost everywhere. He seemed have never been to this place; strange odor filled his nostril.</p><p>Suddenly, a shade of gray passed by the corer of his vision.</p>",
+            "options": [
+                "Strain to listen.",
+                "It was a dream and he needed to wake up."
+            ]
+        },
+        "Dream2": {
+            "prompt": "Rusty strained to listen, and sensed something behind the tree. It could be…",
+            "options": [
+                "a mouse",
+                "an owlet"
+            ]
+        },
+        "Dream3": {
+            "prompt": "<p>Body low, tail high, Rusty prepared for an attack. <em>The mouse is downwind. It won't even know me before it's too late!</em> He burst and had a great catch.</p><p>Suddenly, a noise raised up. It could be…</p>",
+            "options": [
+                "the awakening of monster",
+                "a dream that is coming to its end"
+            ]
+        }
+    }
+}
