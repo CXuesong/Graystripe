@@ -11,7 +11,7 @@ System.register(["./utility", "./vmUtility", "./locale", "./objectModel", "./pta
         };
     })();
     var __moduleName = context_1 && context_1.id;
-    var Utility, VmUtility, Locale, ObjectModel, Ptag, localization_1, StageHistoryEntry, StageOptionViewModel, CurrentStageViewModel, TabViewModel, SaveLoadTabViewModel, PlayerViewModel, vm, t1;
+    var Utility, VmUtility, Locale, ObjectModel, Ptag, localization_1, StageHistoryEntry, StageOptionViewModel, CurrentStageViewModel, TabViewModel, SaveLoadTabViewModel, LanguageSettingsDialogViewModel, PlayerViewModel, vm, t1;
     return {
         setters: [
             function (Utility_1) {
@@ -69,15 +69,20 @@ System.register(["./utility", "./vmUtility", "./locale", "./objectModel", "./pta
                 }
                 CurrentStageViewModel.prototype.refresh = function () {
                     var _this = this;
-                    this.stageName(this.stageContext.currentStage.toString());
-                    this.prompt(Ptag.parseMarkup(this.stageContext.prompt));
-                    var opts = [];
-                    this.stageContext.options.forEach(function (opt) {
-                        opts.push(new StageOptionViewModel(opt, function (sender) {
-                            _this.onOptionClick(sender);
-                        }));
-                    });
-                    this.options(opts);
+                    try {
+                        this.stageName(this.stageContext.currentStage.toString());
+                        this.prompt(Ptag.parseMarkup(this.stageContext.prompt));
+                        var opts_1 = [];
+                        this.stageContext.options.forEach(function (opt) {
+                            opts_1.push(new StageOptionViewModel(opt, function (sender) {
+                                _this.onOptionClick(sender);
+                            }));
+                        });
+                        this.options(opts_1);
+                    }
+                    catch (err) {
+                        VmUtility.showError(err);
+                    }
                 };
                 return CurrentStageViewModel;
             }(VmUtility.LocalizableViewModel));
@@ -116,10 +121,35 @@ System.register(["./utility", "./vmUtility", "./locale", "./objectModel", "./pta
                 }
                 return SaveLoadTabViewModel;
             }(TabViewModel));
+            LanguageSettingsDialogViewModel = (function (_super) {
+                __extends(LanguageSettingsDialogViewModel, _super);
+                function LanguageSettingsDialogViewModel() {
+                    var _this = _super.call(this) || this;
+                    _this.selectedUILanguage = ko.observable("");
+                    _this.selectedGameLanguage = ko.observable("");
+                    _this.uiLanguages = ko.observableArray();
+                    _this.gameLanguages = ko.observableArray();
+                    return _this;
+                }
+                LanguageSettingsDialogViewModel.prototype.prepare = function (uiLanguages, gameLanguages) {
+                    var mapping = function (lang) {
+                        lang = Locale.normalizeLanguageTag(lang);
+                        return [lang, lang];
+                    };
+                    this.uiLanguages(uiLanguages.map(mapping).sort(function (a, b) { return a[0] > b[0] ? 1 : (a[0] < b[0] ? -1 : 0); }));
+                    this.gameLanguages(gameLanguages.map(mapping).sort(function (a, b) { return a[0] > b[0] ? 1 : (a[0] < b[0] ? -1 : 0); }));
+                };
+                LanguageSettingsDialogViewModel.prototype.cleanup = function () {
+                    this.uiLanguages.removeAll();
+                    this.gameLanguages.removeAll();
+                };
+                return LanguageSettingsDialogViewModel;
+            }(VmUtility.LocalizableViewModel));
             PlayerViewModel = (function (_super) {
                 __extends(PlayerViewModel, _super);
                 function PlayerViewModel() {
                     var _this = _super.call(this) || this;
+                    _this.languageSettingsDialogVM = new LanguageSettingsDialogViewModel();
                     _this.gameLang = ko.observable("");
                     _this._engine = new Ptag.GameEngine();
                     _this.currentStageVM = new CurrentStageViewModel(_this._engine.context, function (opt) { _this.gotoStageAsync(opt.target); });
@@ -158,7 +188,7 @@ System.register(["./utility", "./vmUtility", "./locale", "./objectModel", "./pta
                     }
                     var slot = {};
                     slot.time = new Date();
-                    slot.stageContext = this._engine.SaveContext();
+                    slot.stageContext = this._engine.saveContext();
                     store.set("context", slot);
                     toastr.success(localization_1.LR.getString("game_session_saved"));
                 };
@@ -176,13 +206,40 @@ System.register(["./utility", "./vmUtility", "./locale", "./objectModel", "./pta
                     if (!window.confirm(localization_1.LR.getString("game_session_load_prompt")))
                         return $.Deferred().resolve(false);
                     ObjectModel.reconstructSessionSlot(slot);
-                    return this._engine.LoadContextAsync(slot.stageContext)
+                    return this._engine.loadContextAsync(slot.stageContext)
                         .done(function () {
                         _this.currentStageVM.refresh();
                         toastr.success(localization_1.LR.getString("game_session_loaded"), slot.time.toString());
                         return true;
                     })
                         .fail(VmUtility.showError);
+                };
+                PlayerViewModel.prototype.showLanguageSettingsDialog = function () {
+                    var _this = this;
+                    var dlg = document.getElementById("lang-settings-dialog");
+                    if (dlg.open)
+                        return;
+                    dlg.showModal();
+                    Utility.delayAsync(10).then(function () {
+                        var vm = _this.languageSettingsDialogVM;
+                        vm.prepare(localization_1.LR.supportedLocales, _this._engine.supportedLocales);
+                        return Utility.delayAsync(10).then(function () {
+                            console.log(localization_1.LR.getCurrentLocale());
+                            console.log(_this._engine.getCurrentLocale());
+                            vm.selectedUILanguage(localization_1.LR.getCurrentLocale());
+                            vm.selectedGameLanguage(_this._engine.getCurrentLocale());
+                            VmUtility.mdlSelectNotifyChanged(dlg);
+                            var sub1 = vm.selectedUILanguage.subscribe(function (lang) { return localization_1.LR.setCurrentLocaleAsync(lang); });
+                            var sub2 = vm.selectedGameLanguage.subscribe(function (lang) {
+                                return _this._engine.setCurrentLocaleAsync(lang)
+                                    .then(function () { return _this.currentStageVM.refresh(); });
+                            });
+                            $(dlg).on("close", function () {
+                                sub1.dispose();
+                                sub2.dispose();
+                            });
+                        });
+                    });
                 };
                 return PlayerViewModel;
             }(VmUtility.LocalizableViewModel));

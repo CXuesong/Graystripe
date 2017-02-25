@@ -32,7 +32,7 @@ System.register(["./utility", "./locale"], function (exports_1, context_1) {
                 LocalizedResourceProvider.prototype.setCurrentLocaleAsync = function (value) {
                     var _this = this;
                     console.assert(!!this._catalog);
-                    value = (value || "").toLowerCase();
+                    value = Locale.normalizeLanguageTag(value || "");
                     while (value && this._catalog.languages.indexOf(value) < 0) {
                         var fb = Locale.getSurrogateLanguage(value) || Locale.fallbackLanguageTag(value);
                     }
@@ -90,6 +90,13 @@ System.register(["./utility", "./locale"], function (exports_1, context_1) {
                     console.assert(!!locale);
                     return Utility.getJson(LocalizedResourceProvider.LocalizedResourcePath + "/" + locale + "/text.json");
                 };
+                Object.defineProperty(LocalizedResourceProvider.prototype, "supportedLocales", {
+                    get: function () {
+                        return this._catalog.languages;
+                    },
+                    enumerable: true,
+                    configurable: true
+                });
                 return LocalizedResourceProvider;
             }());
             LocalizedResourceProvider.LocalizedResourcePath = "data/localization";

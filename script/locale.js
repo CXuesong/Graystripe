@@ -16,18 +16,22 @@ System.register(["./utility"], function (exports_1, context_1) {
         return locale.surrogates[languageTag] || null;
     }
     exports_1("getSurrogateLanguage", getSurrogateLanguage);
-    function LanguageTagEquals(x, y) {
+    function languageTagEquals(x, y) {
         return x.toLowerCase() === y.toLowerCase();
     }
-    exports_1("LanguageTagEquals", LanguageTagEquals);
-    function FindLanguageTag(x, tags) {
+    exports_1("languageTagEquals", languageTagEquals);
+    function findLanguageTag(x, tags) {
         for (var i = 0; i < tags.length; i++) {
-            if (LanguageTagEquals(x, tags[i]))
+            if (languageTagEquals(x, tags[i]))
                 return tags[i];
         }
         return null;
     }
-    exports_1("FindLanguageTag", FindLanguageTag);
+    exports_1("findLanguageTag", findLanguageTag);
+    function normalizeLanguageTag(tag) {
+        return tag.toLowerCase();
+    }
+    exports_1("normalizeLanguageTag", normalizeLanguageTag);
     var Utility, locale;
     return {
         setters: [

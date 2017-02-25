@@ -62,6 +62,14 @@ System.register([], function (exports_1, context_1) {
         throw new TypeError("Cannot convert XML to string.");
     }
     exports_1("XmlToString", XmlToString);
+    function delayAsync(milliseconds) {
+        var d = $.Deferred();
+        setTimeout(function () {
+            d.resolve();
+        }, milliseconds);
+        return d;
+    }
+    exports_1("delayAsync", delayAsync);
     var NetError, ResourceMissingError;
     return {
         setters: [],
