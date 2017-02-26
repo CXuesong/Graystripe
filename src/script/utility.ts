@@ -34,8 +34,8 @@ export function formatString(format: string, ...args: any[]): string;
 export function formatString() {
     let content = arguments[0];
     for (let i = 1; i < arguments.length; i++) {
-        let replacement = "{" + (i - 1) + "}";
-        content = content.replace(replacement, arguments[i]);
+        let replacement = new RegExp("\\{" + (i - 1) + "\\}", "g");
+        content = content.replace(replacement, htmlEscape(arguments[i]));
     }
     return content;
 }
@@ -71,7 +71,7 @@ export function XmlToString(element: Node) {
 
 export function delayAsync(milliseconds: number): JQueryPromise<void> {
     let d = $.Deferred<void>();
-    setTimeout(function() {
+    setTimeout(function () {
         d.resolve();
     }, milliseconds);
     return d;

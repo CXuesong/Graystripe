@@ -14,5 +14,7 @@
     "game_restart": "返回到開頭",
     "stage_loading": "載入場景……",
     "close": "關閉",
+    "cannot_load_gamebook_title": "無法載入遊戲",
+    "cannot_load_gamebook_prompt": "很抱歉，我們無法載入指定的遊戲劇本：<a href=\"{0}\">{0}</a>。你可能需要檢查網路連線，以及此URL是否正確。",
     "": "" /* JSON 占位符 */
 }

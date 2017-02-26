@@ -22,3 +22,7 @@ export function mdlSelectNotifyChanged(container: Element) {
         msf.selectedOptionValue_.textContent = sel >= 0 ? msf.select_.options[sel].text : null;
     });
 }
+
+export function getQueryParameters() {
+    return <{ [name: string]: string }>new URI(location.href).query(true);
+}

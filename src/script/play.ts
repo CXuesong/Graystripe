@@ -125,9 +125,14 @@ class PlayerViewModel extends VmUtility.LocalizableViewModel {
     // public get engine() { return this._engine; }
     public openGameAsync() {
         let t = toastr.info("<span data-bind=\"text: LC('game_loading')\">Loading…</span>", null, { timeOut: 0 });
+        let gamebook = VmUtility.getQueryParameters().gamebook || "data/demo/game.json";
         this._engine.clear();
-        return this._engine.openGameAsync(new URI(window.location.href).hash("").search("").filename("data/demo/game.json").toString())
+        return this._engine.openGameAsync(new URI(gamebook).absoluteTo(window.location.href).toString())
             .done(() => { this.currentStageVM.refresh(); }).fail(VmUtility.showError)
+            .fail(err => {
+                this.currentStageVM.stageName(LR.getString("cannot_load_gamebook_title"));
+                this.currentStageVM.prompt(LR.getString("cannot_load_gamebook_prompt", gamebook));
+            })
             .always(() => { t.hide(); });
     }
 
@@ -218,8 +223,7 @@ let t1 = toastr.info("Loading localization resource…");
 vm.gameLang(navigator.language);
 Locale.initializeAsync().then(() => { return LR.initializeAsync(navigator.language); })
     .always(() => { t1.hide(); })
-    .then(() => { document.title = LR.getString("ptag"); return vm.openGameAsync(); })
-    .fail(VmUtility.showError);
+    .then(() => { document.title = LR.getString("ptag"); return vm.openGameAsync(); }, VmUtility.showError);
 
 console.log(vm);
 ko.applyBindings(vm);
