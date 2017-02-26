@@ -29,8 +29,8 @@ System.register([], function (exports_1, context_1) {
     function formatString() {
         var content = arguments[0];
         for (var i = 1; i < arguments.length; i++) {
-            var replacement = "{" + (i - 1) + "}";
-            content = content.replace(replacement, arguments[i]);
+            var replacement = new RegExp("\\{" + (i - 1) + "\\}", "g");
+            content = content.replace(replacement, htmlEscape(arguments[i]));
         }
         return content;
     }

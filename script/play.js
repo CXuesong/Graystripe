@@ -159,9 +159,14 @@ System.register(["./utility", "./vmUtility", "./locale", "./objectModel", "./pta
                 PlayerViewModel.prototype.openGameAsync = function () {
                     var _this = this;
                     var t = toastr.info("<span data-bind=\"text: LC('game_loading')\">Loading…</span>", null, { timeOut: 0 });
+                    var gamebook = VmUtility.getQueryParameters().gamebook || "data/demo/game.json";
                     this._engine.clear();
-                    return this._engine.openGameAsync(new URI(window.location.href).hash("").search("").filename("data/demo/game.json").toString())
+                    return this._engine.openGameAsync(new URI(gamebook).absoluteTo(window.location.href).toString())
                         .done(function () { _this.currentStageVM.refresh(); }).fail(VmUtility.showError)
+                        .fail(function (err) {
+                        _this.currentStageVM.stageName(localization_1.LR.getString("cannot_load_gamebook_title"));
+                        _this.currentStageVM.prompt(localization_1.LR.getString("cannot_load_gamebook_prompt", gamebook));
+                    })
                         .always(function () { t.hide(); });
                 };
                 PlayerViewModel.prototype.gotoStageAsync = function (targetStageName) {
@@ -248,8 +253,7 @@ System.register(["./utility", "./vmUtility", "./locale", "./objectModel", "./pta
             vm.gameLang(navigator.language);
             Locale.initializeAsync().then(function () { return localization_1.LR.initializeAsync(navigator.language); })
                 .always(function () { t1.hide(); })
-                .then(function () { document.title = localization_1.LR.getString("ptag"); return vm.openGameAsync(); })
-                .fail(VmUtility.showError);
+                .then(function () { document.title = localization_1.LR.getString("ptag"); return vm.openGameAsync(); }, VmUtility.showError);
             console.log(vm);
             ko.applyBindings(vm);
         }

@@ -15,6 +15,10 @@ System.register(["./utility", "./localization"], function (exports_1, context_1)
         });
     }
     exports_1("mdlSelectNotifyChanged", mdlSelectNotifyChanged);
+    function getQueryParameters() {
+        return new URI(location.href).query(true);
+    }
+    exports_1("getQueryParameters", getQueryParameters);
     var Utility, localization_1, LocalizableViewModel;
     return {
         setters: [
