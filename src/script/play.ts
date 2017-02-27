@@ -106,13 +106,34 @@ class LanguageSettingsDialogViewModel extends VmUtility.LocalizableViewModel {
     }
 }
 
+class OpenGamebookDialogViewModel extends VmUtility.LocalizableViewModel {
+    public sourceUrl = ko.observable<string>();
+
+    private onOpenGamebook: () => void;
+
+    public prepare(onOpenGamebook: () => void) {
+        this.onOpenGamebook = onOpenGamebook;
+    }
+
+    public notifyOpenGamebook() {
+        this.onOpenGamebook();
+        this.onOpenGamebook = null;
+    }
+
+    public constructor() {
+        super();
+    }
+}
+
 /**
  * play.html main VM.
  */
 class PlayerViewModel extends VmUtility.LocalizableViewModel {
     public readonly currentStageVM: CurrentStageViewModel;
     public readonly languageSettingsDialogVM = new LanguageSettingsDialogViewModel();
+    public readonly openGamebookDialogVM = new OpenGamebookDialogViewModel();
     public readonly gameLang = ko.observable("");
+    public readonly gameTitle = ko.observable("");
 
     private readonly _engine = new Ptag.GameEngine();
 
@@ -123,15 +144,31 @@ class PlayerViewModel extends VmUtility.LocalizableViewModel {
     }
 
     // public get engine() { return this._engine; }
-    public openGameAsync() {
+    public openGameAsync(gamebookUrl?: string) {
         let t = toastr.info("<span data-bind=\"text: LC('game_loading')\">Loading…</span>", null, { timeOut: 0 });
-        let gamebook = VmUtility.getQueryParameters().gamebook || "data/demo/game.json";
+        let params = VmUtility.getQueryParameters();
+        if (!gamebookUrl) {
+            gamebookUrl = "data/demo/game.json";
+            if (params.gamebook) {
+                // Absolute file:///
+                if (params.gamebook.match(/^file:\/\//))
+                    gamebookUrl = params.gamebook;
+                else
+                    gamebookUrl = new URI(params.gamebook).absoluteTo(window.location.href).toString();
+            }
+        }
         this._engine.clear();
-        return this._engine.openGameAsync(new URI(gamebook).absoluteTo(window.location.href).toString())
-            .done(() => { this.currentStageVM.refresh(); }).fail(VmUtility.showError)
+        this.gameTitle("…");
+        document.title = LR.getString("ptag");
+        return this._engine.openGameAsync(gamebookUrl)
+            .done(() => {
+                this.currentStageVM.refresh();
+                this.gameTitle(this._engine.gameMeta.name);
+                document.title = this._engine.gameMeta.name + " - " + LR.getString("ptag");
+            }).fail(VmUtility.showError)
             .fail(err => {
                 this.currentStageVM.stageName(LR.getString("cannot_load_gamebook_title"));
-                this.currentStageVM.prompt(LR.getString("cannot_load_gamebook_prompt", gamebook));
+                this.currentStageVM.prompt(LR.getString("cannot_load_gamebook_prompt", gamebookUrl));
             })
             .always(() => { t.hide(); });
     }
@@ -208,11 +245,29 @@ class PlayerViewModel extends VmUtility.LocalizableViewModel {
                 let sub2 = vm.selectedGameLanguage.subscribe(lang =>
                     this._engine.setCurrentLocaleAsync(lang)
                         .then(() => this.currentStageVM.refresh()));
-                $(dlg).on("close", () => {
+                let onClose = () => {
+                    $(dlg).off("close", onClose);
                     sub1.dispose();
                     sub2.dispose();
-                });
+                    vm.cleanup();
+                };
+                $(dlg).on("close", onClose);
             });
+        });
+    }
+
+    private showOpenGamebookDialog() {
+        let dlg = <HTMLDialogElement>document.getElementById("open-gamebook-dialog");
+        if (dlg.open) return;
+        let vm = this.openGamebookDialogVM;
+        vm.sourceUrl(this._engine.context.gamebookUrl);
+        dlg.showModal();
+        vm.prepare(() => {
+            let url = vm.sourceUrl();
+            let href = new URI(location.href).setSearch("gamebook", url).toString();
+            if (history.replaceState)
+                history.replaceState(null, document.title, href);
+            this.openGameAsync(url);
         });
     }
 }

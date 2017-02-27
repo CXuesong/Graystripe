@@ -14,6 +14,10 @@
     "game_restart": "返回到开头",
     "stage_loading": "加载场景……",
     "close": "关闭",
+    "open_gamebook": "打开剧本",
+    "open": "打开",
+    "open_gamebook_prompt": "你可以键入剧本所在URL，然后轻按“打开”以继续。",
+    "gamebook_url": "游戏剧本URL",
     "cannot_load_gamebook_title": "无法加载游戏",
     "cannot_load_gamebook_prompt": "很抱歉，我们无法加载指定的游戏剧本：<a href=\"{0}\">{0}</a>。你可能需要检查网络连接，以及此URL是否正确。",
     "": "" /* JSON 占位符 */

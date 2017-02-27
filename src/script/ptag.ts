@@ -59,7 +59,7 @@ export class StageGroupMissingError extends Utility.ResourceMissingError {
  * Mutable stage state.
  */
 export class StageContext {
-    public rootUrl: string;
+    public gamebookUrl: string;
     public currentStage: StageName;
     public stateStore: { [key: string]: any } = {};
     // Current Stage
@@ -67,10 +67,10 @@ export class StageContext {
     public options: ObjectModel.StageOption[];
     // Utility
     public getAbsUrl(path: string) {
-        return new URI(this.rootUrl).filename(path).toString();
+        return new URI(this.gamebookUrl).filename(path).query("").hash("").toString();
     }
     public clear() {
-        this.rootUrl = null;
+        this.gamebookUrl = null;
         this.currentStage = null;
         this.stateStore = {};
         this.prompt = null;
@@ -95,6 +95,8 @@ export class GameEngine implements Locale.LocaleAware {
         this.clear();
     }
 
+    public get gameMeta() { return this._game; }
+
     public getCurrentLocale() {
         return this._currentLocale;
     }
@@ -118,7 +120,7 @@ export class GameEngine implements Locale.LocaleAware {
     public openGameAsync(url: string) {
         return Utility.getJson(url).then((json) => {
             this._game = <ObjectModel.GameMeta>json;
-            this._context.rootUrl = new URI(url).hash("").search("").filename("").toString();
+            this._context.gamebookUrl = new URI(url).normalize().toString();
             return this.gotoStageAsync(new StageName(":"));
         });
     }

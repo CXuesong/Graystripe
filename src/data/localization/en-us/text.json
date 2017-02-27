@@ -14,6 +14,10 @@
     "game_restart": "Restart",
     "stage_loading": "Loading stage…",
     "close": "Close",
+    "open_gamebook": "Open a gamebook",
+    "open": "Open",
+    "open_gamebook_prompt": "Please enter the URL of the gamebook below; then press “Open” to continue.",
+    "gamebook_url": "Gamebook URL",
     "cannot_load_gamebook_title": "Cannot load gamebook",
     "cannot_load_gamebook_prompt": "Sorry, but we cannot load the specified gamebook: <a href=\"{0}\">{0}</a>. Maybe you need to check the network connection, as well as whether you've got the correct URL.",
     "": "" /* JSON placeholder */
