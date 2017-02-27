@@ -100,10 +100,10 @@ System.register(["./utility", "./locale"], function (exports_1, context_1) {
                     this.clear();
                 }
                 StageContext.prototype.getAbsUrl = function (path) {
-                    return new URI(this.rootUrl).filename(path).toString();
+                    return new URI(this.gamebookUrl).filename(path).query("").hash("").toString();
                 };
                 StageContext.prototype.clear = function () {
-                    this.rootUrl = null;
+                    this.gamebookUrl = null;
                     this.currentStage = null;
                     this.stateStore = {};
                     this.prompt = null;
@@ -120,6 +120,11 @@ System.register(["./utility", "./locale"], function (exports_1, context_1) {
                     this._currentLocale = "";
                     this.clear();
                 }
+                Object.defineProperty(GameEngine.prototype, "gameMeta", {
+                    get: function () { return this._game; },
+                    enumerable: true,
+                    configurable: true
+                });
                 GameEngine.prototype.getCurrentLocale = function () {
                     return this._currentLocale;
                 };
@@ -141,7 +146,7 @@ System.register(["./utility", "./locale"], function (exports_1, context_1) {
                     var _this = this;
                     return Utility.getJson(url).then(function (json) {
                         _this._game = json;
-                        _this._context.rootUrl = new URI(url).hash("").search("").filename("").toString();
+                        _this._context.gamebookUrl = new URI(url).normalize().toString();
                         return _this.gotoStageAsync(new StageName(":"));
                     });
                 };

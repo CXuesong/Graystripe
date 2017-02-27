@@ -23,6 +23,7 @@
 </head>
 
 <body>
+    <!-- dialogs -->
     <dialog id="lang-settings-dialog" class="mdl-dialog" data-bind="with: languageSettingsDialogVM">
         <h4 class="mdl-dialog__title">Language Settings</h4>
         <div class="mdl-dialog__content">
@@ -43,10 +44,25 @@
             <button type="submit" class="mdl-button mdl-button--primary" value="close" data-bind="text: LC('close')">Close</button>
         </form>
     </dialog>
+    <dialog id="open-gamebook-dialog" class="mdl-dialog" data-bind="with: openGamebookDialogVM">
+        <h4 class="mdl-dialog__title" data-bind="text: LC('open_gamebook')">Open a Gamebook</h4>
+        <div class="mdl-dialog__content">
+            <p data-bind="text: LC('open_gamebook_prompt')">Prompt</p>
+            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                <input class="mdl-textfield__input" type="text" id="open-gamebook-url" data-bind="value: sourceUrl">
+                <label class="mdl-textfield__label" for="open-gamebook-url" data-bind="text: LC('gamebook_url')">URL</label>
+            </div>
+        </div>
+        <form method="dialog" class="mdl-dialog__actions">
+            <button type="submit" class="mdl-button mdl-button--primary" data-bind="text: LC('open'), click: notifyOpenGamebook, clickBubble: false">Open</button>
+            <button type="submit" class="mdl-button" data-bind="text: LC('close')">Close</button>
+        </form>
+    </dialog>
+    <!-- end dialogs -->
     <div id="root-container" class="mdl-layout mdl-js-layout mdl-layout--fixed-drawer mdl-layout--fixed-header">
         <header class="mdl-layout__header">
             <div class="mdl-layout__header-row">
-                <span class="mdl-layout-title">PTAG</span>
+                <span class="mdl-layout-title"><span data-bind="text: gameTitle">Graystripe</span></span>
                 <div class="mdl-layout-spacer"></div>
                 <div class="mdl-textfield mdl-js-textfield mdl-textfield--expandable">
                     <label class="mdl-button mdl-js-button mdl-button--icon" for="search">
@@ -69,8 +85,10 @@
             </div>
         </header>
         <div class="mdl-layout__drawer">
-            <div class="mdl-layout-title">Menu</div>
+            <div class="mdl-layout-title">PTAG</div>
             <nav class="mdl-navigation">
+                <a class="mdl-navigation__link" href="" data-bind="click: showOpenGamebookDialog"><i class="mdl-color-text--blue-grey-400 material-icons" role="presentation">folder_open</i> <span data-bind="text: LC('open_gamebook')"></span></a>
+                <hr />
                 <a class="mdl-navigation__link" href="" data-bind="click: saveGame"><i class="mdl-color-text--blue-grey-400 material-icons" role="presentation">save</i> <span data-bind="text: LC('game_save_session')"></span></a>
                 <a class="mdl-navigation__link" href="" data-bind="click: loadGame"><i class="mdl-color-text--blue-grey-400 material-icons" role="presentation">restore</i> <span data-bind="text: LC('game_load_session')"></span></a>
                 <hr />

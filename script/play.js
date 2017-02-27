@@ -11,7 +11,7 @@ System.register(["./utility", "./vmUtility", "./locale", "./objectModel", "./pta
         };
     })();
     var __moduleName = context_1 && context_1.id;
-    var Utility, VmUtility, Locale, ObjectModel, Ptag, localization_1, StageHistoryEntry, StageOptionViewModel, CurrentStageViewModel, TabViewModel, SaveLoadTabViewModel, LanguageSettingsDialogViewModel, PlayerViewModel, vm, t1;
+    var Utility, VmUtility, Locale, ObjectModel, Ptag, localization_1, StageHistoryEntry, StageOptionViewModel, CurrentStageViewModel, TabViewModel, SaveLoadTabViewModel, LanguageSettingsDialogViewModel, OpenGamebookDialogViewModel, PlayerViewModel, vm, t1;
     return {
         setters: [
             function (Utility_1) {
@@ -145,27 +145,60 @@ System.register(["./utility", "./vmUtility", "./locale", "./objectModel", "./pta
                 };
                 return LanguageSettingsDialogViewModel;
             }(VmUtility.LocalizableViewModel));
+            OpenGamebookDialogViewModel = (function (_super) {
+                __extends(OpenGamebookDialogViewModel, _super);
+                function OpenGamebookDialogViewModel() {
+                    var _this = _super.call(this) || this;
+                    _this.sourceUrl = ko.observable();
+                    return _this;
+                }
+                OpenGamebookDialogViewModel.prototype.prepare = function (onOpenGamebook) {
+                    this.onOpenGamebook = onOpenGamebook;
+                };
+                OpenGamebookDialogViewModel.prototype.notifyOpenGamebook = function () {
+                    this.onOpenGamebook();
+                    this.onOpenGamebook = null;
+                };
+                return OpenGamebookDialogViewModel;
+            }(VmUtility.LocalizableViewModel));
             PlayerViewModel = (function (_super) {
                 __extends(PlayerViewModel, _super);
                 function PlayerViewModel() {
                     var _this = _super.call(this) || this;
                     _this.languageSettingsDialogVM = new LanguageSettingsDialogViewModel();
+                    _this.openGamebookDialogVM = new OpenGamebookDialogViewModel();
                     _this.gameLang = ko.observable("");
+                    _this.gameTitle = ko.observable("");
                     _this._engine = new Ptag.GameEngine();
                     _this.currentStageVM = new CurrentStageViewModel(_this._engine.context, function (opt) { _this.gotoStageAsync(opt.target); });
                     _this.gameLang.subscribe(function (v) { _this._engine.setCurrentLocaleAsync(v); });
                     return _this;
                 }
-                PlayerViewModel.prototype.openGameAsync = function () {
+                PlayerViewModel.prototype.openGameAsync = function (gamebookUrl) {
                     var _this = this;
                     var t = toastr.info("<span data-bind=\"text: LC('game_loading')\">Loading…</span>", null, { timeOut: 0 });
-                    var gamebook = VmUtility.getQueryParameters().gamebook || "data/demo/game.json";
+                    var params = VmUtility.getQueryParameters();
+                    if (!gamebookUrl) {
+                        gamebookUrl = "data/demo/game.json";
+                        if (params.gamebook) {
+                            if (params.gamebook.match(/^file:\/\//))
+                                gamebookUrl = params.gamebook;
+                            else
+                                gamebookUrl = new URI(params.gamebook).absoluteTo(window.location.href).toString();
+                        }
+                    }
                     this._engine.clear();
-                    return this._engine.openGameAsync(new URI(gamebook).absoluteTo(window.location.href).toString())
-                        .done(function () { _this.currentStageVM.refresh(); }).fail(VmUtility.showError)
+                    this.gameTitle("…");
+                    document.title = localization_1.LR.getString("ptag");
+                    return this._engine.openGameAsync(gamebookUrl)
+                        .done(function () {
+                        _this.currentStageVM.refresh();
+                        _this.gameTitle(_this._engine.gameMeta.name);
+                        document.title = _this._engine.gameMeta.name + " - " + localization_1.LR.getString("ptag");
+                    }).fail(VmUtility.showError)
                         .fail(function (err) {
                         _this.currentStageVM.stageName(localization_1.LR.getString("cannot_load_gamebook_title"));
-                        _this.currentStageVM.prompt(localization_1.LR.getString("cannot_load_gamebook_prompt", gamebook));
+                        _this.currentStageVM.prompt(localization_1.LR.getString("cannot_load_gamebook_prompt", gamebookUrl));
                     })
                         .always(function () { t.hide(); });
                 };
@@ -239,11 +272,30 @@ System.register(["./utility", "./vmUtility", "./locale", "./objectModel", "./pta
                                 return _this._engine.setCurrentLocaleAsync(lang)
                                     .then(function () { return _this.currentStageVM.refresh(); });
                             });
-                            $(dlg).on("close", function () {
+                            var onClose = function () {
+                                $(dlg).off("close", onClose);
                                 sub1.dispose();
                                 sub2.dispose();
-                            });
+                                vm.cleanup();
+                            };
+                            $(dlg).on("close", onClose);
                         });
+                    });
+                };
+                PlayerViewModel.prototype.showOpenGamebookDialog = function () {
+                    var _this = this;
+                    var dlg = document.getElementById("open-gamebook-dialog");
+                    if (dlg.open)
+                        return;
+                    var vm = this.openGamebookDialogVM;
+                    vm.sourceUrl(this._engine.context.gamebookUrl);
+                    dlg.showModal();
+                    vm.prepare(function () {
+                        var url = vm.sourceUrl();
+                        var href = new URI(location.href).setSearch("gamebook", url).toString();
+                        if (history.replaceState)
+                            history.replaceState(null, document.title, href);
+                        _this.openGameAsync(url);
                     });
                 };
                 return PlayerViewModel;
